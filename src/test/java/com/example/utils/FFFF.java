@@ -82,14 +82,30 @@ public interface FFFF {
 //		StringBuilder str = builder.append(sb);	
 
 	}
-	
+
 	default String mqMessageToString(MQMessage m) throws IOException {
 		StringBuilder builder = new StringBuilder();
 
 		while (m.getDataLength() > 0)
-			builder.append(m.readLine());
+			builder.append(m.readLine()).append(System.lineSeparator());
 
 		String aaa = builder.toString();
 		return aaa;
 	}
+
+//	default String Encoding(MQMessage mm) {
+//		
+//
+////		BufferedReader b_reader = new BufferedReader(new InputStreamReader(new FileInputStream(file), "Shift-JIS"));
+//	StringBuilder builder = new StringBuilder();try(
+//	BufferedReader b_reader = new BufferedReader(new InputStreamReader(new FileInputStream(file), "Shift-JIS"));)
+//	{
+//		while (mm.getDataLength() > 0) {
+//			builder.append(mm.readLine()).append(System.lineSeparator());
+//
+//			String bbb = builder.toString();
+//		}
+//
+//		return bbb;
+//	}
 }

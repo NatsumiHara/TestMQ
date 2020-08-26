@@ -13,6 +13,7 @@ import static com.example.demo.KKK.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.w3c.dom.Document;
 
 import com.example.utils.FFFF;
 import com.example.utils.Super;
@@ -46,17 +47,32 @@ class RizaSampleApplicationTests2 implements Super, FFFF {
 	@Test
 	@DisplayName("QCからDL")
 	void contextLoadsQcqa() throws Exception {
-
-		String data = fileToString(TEST2_XML);
-		MQMessage putData = putMessages(data);
+		
+		Document data = fileToDocument(TEST2_XML);
+//		String xData = xPath(data, "/CENTER/GLB_HEAD/SERVICEID");
+//		String xData2 = xPath(data, "/CENTER/GLB_HEAD/TIMESTAMP/TS[1]/@SVR");
+//		String xData3 = xPath(data, "/CENTER/GLB_HEAD/TIMESTAMP/TS[2]");
+//		
+//		
+//		System.out.println(xData);
+//		System.out.println(xData2);
+//		System.out.println(xData3);
+		MQMessage putData = putMessages(documentToString(data));
 		put(QC_DH_REQ, putData);
-		System.out.println(DatatypeConverter.printHexBinary(putData.messageId));
-
 		MQMessage getData = get(QA_DH_DL, putData.messageId);
-//		MQMessage getData = get(QA_DH_DL);
-		String strMessage = getData.readLine();
-		System.out.println(strMessage);
-		extracted(putData, getData);
+		extracted(putData, data,getData);
+		
+//
+//		Document data = fileToDocument(TEST2_XML);
+//		MQMessage putData = putMessages(documentToString(data));
+//		put(QC_DH_REQ, putData);
+////		System.out.println(DatatypeConverter.printHexBinary(putData.messageId));
+//
+//		MQMessage getData = get(QA_DH_DL, putData.messageId);
+////		MQMessage getData = get(QA_DH_DL);
+////		String strMessage = getData.readLine();
+////		System.out.println(strMessage);
+//		extracted(putData, data, getData);
 
 //		String getMessageId = new String(getData.correlationId, UTF8);
 //		String putMessageId = new String(putData.messageId, UTF8);
@@ -79,10 +95,10 @@ class RizaSampleApplicationTests2 implements Super, FFFF {
 	@DisplayName("QLからDL")
 	void contextLoadsQlqa() throws Exception {
 
-		String data = fileToString(TEST2_XML);
-		MQMessage putData = putMessages(data);
+		Document putXmlData = fileToDocument(TEST2_XML);
+		MQMessage putData = putMessages(documentToString(putXmlData));
 		put(QL_DH_REQ, putData);
-		System.out.println(DatatypeConverter.printHexBinary(putData.messageId));
+//		System.out.println(DatatypeConverter.printHexBinary(putData.messageId));
 
 		MQMessage getData = get(QA_DH_DL, putData.messageId);
 //		MQMessage getData = get(QA_DH_DL);
@@ -97,8 +113,8 @@ class RizaSampleApplicationTests2 implements Super, FFFF {
 //		System.out.println(getData.messageType);
 //		System.out.println(getData.persistence);
 //		System.out.println(getData.priority);
-		String strMessage = getData.readLine();
-		System.out.println(strMessage);
+//		String strMessage = getData.readLine();
+//		System.out.println(strMessage);
 //		assertThat(getData.replyToQueueManagerName.trim()).isEqualTo(QMFH01);
 //		assertThat(getData.replyToQueueName.trim()).isEqualTo(QL_DH_REP.getQNames());
 //		assertThat(getData.characterSet).isEqualTo(943);
@@ -117,7 +133,7 @@ class RizaSampleApplicationTests2 implements Super, FFFF {
 //		String getMessageId = new String(getData.correlationId, UTF8);
 //		String putMessageId = new String(fff.messageId, UTF8);
 //		assertThat(getMessageId).isEqualTo(putMessageId);
-		extracted(putData, getData);
+		extracted(putData, putXmlData, getData);
 	}
 
 	@Override

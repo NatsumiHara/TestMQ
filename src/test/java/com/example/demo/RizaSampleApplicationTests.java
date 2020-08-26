@@ -36,43 +36,41 @@ class RizaSampleApplicationTests implements Super, FFFF, IDGenerator {
 	@DisplayName("QCからDF")
 	void contextLoads() throws Exception {
 
-		String data = fileToString(TEST_XML);
-		MQMessage putData1 = putMessages(data);
-		put(QC_DH_REQ, putData1);
-		System.out.println(DatatypeConverter.printHexBinary(putData1.messageId));
-		MQMessage putData2 = putMessages(data);
-		put(QC_DH_REQ, putData2);
-		System.out.println(DatatypeConverter.printHexBinary(putData2.messageId));
-		MQMessage putData3 = putMessages(data);
-		put(QC_DH_REQ, putData3);
-		System.out.println(DatatypeConverter.printHexBinary(putData3.messageId));
+		Document putXmlData = fileToDocument(TEST_XML);
+		MQMessage putData = putMessages(documentToString(putXmlData));
+		put(QC_DH_REQ, putData);
+//		System.out.println(DatatypeConverter.printHexBinary(putData1.messageId));
+//		MQMessage putData2 = putMessages(data);
+//		put(QC_DH_REQ, putData2);
+//		System.out.println(DatatypeConverter.printHexBinary(putData2.messageId));
+//		MQMessage putData3 = putMessages(data);
+//		put(QC_DH_REQ, putData3);
+//		System.out.println(DatatypeConverter.printHexBinary(putData3.messageId));
 
-		MQMessage getData = get(QL_DH_HTTP_LSR, putData1.messageId);
+		MQMessage getData = get(QL_DH_HTTP_LSR, putData.messageId);
 //		MQMessage getData = get(QL_DH_HTTP_LSR.getQNames(),getUnique24().getBytes());
 //		MQMessage getData = get(QL_DH_HTTP_LSR);
-		System.out.println(DatatypeConverter.printHexBinary(getData.correlationId));
+//		System.out.println(DatatypeConverter.printHexBinary(getData.correlationId));
 //		System.out.println(getData.correlationId);
-		String strMessage = getData.readLine();
-		System.out.println(strMessage);
-		extracted(putData1, getData);
-		extracted(putData2, getData);
-		extracted(putData3, getData);
+//		String strMessage = getData.readLine();
+//		System.out.println(strMessage);
+		extracted(putData, putXmlData, getData);
 	}
 
 	@Test
 	@DisplayName("QLからDF")
 	void contextLoadsDlql() throws Exception {
 
-		Document data = fileToDocument(TEST_XML);
-		String xData = xPath(data, "/CENTER/GLB_HEAD/SERVICEID");
-		String xData2 = xPath(data, "/CENTER/GLB_HEAD/TIMESTAMP/TS[1]/@SVR");
-		String xData3 = xPath(data, "/CENTER/GLB_HEAD/TIMESTAMP/TS[2]");
-		
-		
-		System.out.println(xData);
-		System.out.println(xData2);
-		System.out.println(xData3);
-		MQMessage putData = putMessages(documentToString(data));
+		Document putXmlData = fileToDocument(TEST_XML);
+//		String xData = xPath(putXmlData, "/CENTER/GLB_HEAD/SERVICEID");
+//		String xData2 = xPath(putXmlData, "/CENTER/GLB_HEAD/TIMESTAMP/TS[1]/@SVR");
+//		String xData3 = xPath(putXmlData, "/CENTER/GLB_HEAD/TIMESTAMP/TS[2]");
+//		
+//		
+//		System.out.println(xData);
+//		System.out.println(xData2);
+//		System.out.println(xData3);
+		MQMessage putData = putMessages(documentToString(putXmlData));
 		put(QL_DH_REQ, putData);
 //		System.out.println(DatatypeConverter.printHexBinary(putData.messageId));
 		MQMessage getData = get(QL_DH_HTTP_LSR, putData.messageId);
@@ -103,8 +101,16 @@ class RizaSampleApplicationTests implements Super, FFFF, IDGenerator {
 //		Document docMessage = stringToDocument(ms);
 //		String xDataGet = xPath(docMessage, "/CENTER/GLB_HEAD/SERVICEID");
 //		System.out.println(xDataGet);
-		extracted(putData, getData);
+		extracted(putData, putXmlData,getData);
+	
 	}
+	
+//	@Test
+//	public void aa() {
+//		String name = "RC";
+//		if(!name.equals("RC")&&!name.equals("TIMESTAMP")&&!name.equals("REPLY"))
+//		System.out.println("OK");
+//	}
 
 	@Override
 	public String getQmgr() {
