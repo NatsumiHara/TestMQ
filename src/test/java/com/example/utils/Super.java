@@ -2,9 +2,9 @@ package com.example.utils;
 
 import static com.example.demo.KKK.QL_DH_REP;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.text.ParseException;
 import java.time.LocalDateTime;
@@ -56,11 +56,6 @@ public interface Super extends FFFF {
 
 	public default void clean(String qName) throws Exception {
 		MQMessage qu;
-//		MQMessage qu = get("QA.DH.DL");
-//
-//		while (qu != null) {
-//			qu = get("QA.DH.DL");
-//		}
 		do {
 			qu = get(qName);
 		} while (qu != null);
@@ -71,8 +66,20 @@ public interface Super extends FFFF {
 		MQEnvironment.hostname = getLocalhost();
 		MQEnvironment.channel = getCannal();
 		MQEnvironment.port = getPort();
-//		MQEnvironment.CCSID = 1208;
 		MQEnvironment.properties.put(MQC.TRANSPORT_PROPERTY, MQC.TRANSPORT_MQSERIES);
+	}
+	
+	public default MQMessage putMessages(String data) throws IOException {
+		MQMessage putMessage = new MQMessage();
+		putMessage.priority = 5;
+		putMessage.characterSet = 1208;
+		putMessage.replyToQueueManagerName = "QMDW01";
+		putMessage.format = MQC.MQFMT_STRING;
+		putMessage.replyToQueueName = "QL.DW.REP";
+		putMessage.writeString(data);
+		putMessage.persistence = 1;
+		putMessage.messageId = MQC.MQMI_NONE;
+		return putMessage;
 	}
 
 	public default void put(KKK constantQName, MQMessage putData) throws Exception {
@@ -87,13 +94,6 @@ public interface Super extends FFFF {
 			qmgr = new MQQueueManager(getQmgr());
 			int openOption = MQC.MQOO_OUTPUT;
 			queue = qmgr.accessQueue(qName, openOption);
-//			MQMessage putMessage = new MQMessage();
-//			putMessage.priority = 5;
-//			putMessage.characterSet = 1208;
-//			putMessage.replyToQueueManagerName = "QMDW01";
-//			putMessage.format=MQC.MQFMT_STRING;
-//			putMessage.replyToQueueName = "QL.DW.REP";
-//			putMessage.writeString(data);
 			MQPutMessageOptions mqpmo = new MQPutMessageOptions();
 			mqpmo.options = MQC.MQPMO_NO_SYNCPOINT;
 			queue.put(putData, mqpmo);
@@ -109,9 +109,6 @@ public interface Super extends FFFF {
 	}
 
 	public default MQMessage get(KKK constantQName) throws Exception {
-//		MQMessage a = y.getQNames();
-//		return ;
-//		MQMessage a = get(y.getQNames());
 		return get(constantQName.getQNames());
 	}
 
@@ -131,7 +128,7 @@ public interface Super extends FFFF {
 		return get(qName, getMessage, mqgmo);
 	}
 
-	default MQMessage get(String qName, MQMessage a, MQGetMessageOptions b) throws Exception {
+	default MQMessage get(String qName, MQMessage getMessageInCorrelId, MQGetMessageOptions matchCorrelIdOption) throws Exception {
 		setMQEnvironment();
 		MQQueueManager qmgr = null;
 		MQQueue queue = null;
@@ -139,16 +136,10 @@ public interface Super extends FFFF {
 			qmgr = new MQQueueManager(getQmgr());
 			int openOption = MQC.MQOO_INPUT_AS_Q_DEF;
 			queue = qmgr.accessQueue(qName, openOption);
-			b.options = MQC.MQGMO_NO_WAIT;
-//			MQGetMessageOptions mqgmo = new MQGetMessageOptions();
-//			mqgmo.matchOptions = MQC.MQMO_MATCH_CORREL_ID;
-//			MQMessage getMessage = new MQMessage();
-//			getMessage.correlationId = g;
-
-			queue.get(a, b);
-			return a;
+//			matchCorrelIdOption.options = MQC.MQGMO_NO_WAIT;
+			queue.get(getMessageInCorrelId, matchCorrelIdOption);
+			return getMessageInCorrelId;
 		} catch (MQException e) {
-//			System.out.println(e.reasonCode);
 			if (e.reasonCode == 2033) {
 				return null;
 			} else {
@@ -168,98 +159,78 @@ public interface Super extends FFFF {
 		return get(z.getQNames(), d);
 	}
 
-	public default MQMessage putMessages(String data) throws IOException {
-		MQMessage putMessage = new MQMessage();
-		putMessage.priority = 5;
-		putMessage.characterSet = 1208;
-		putMessage.replyToQueueManagerName = "QMDW01";
-		putMessage.format = MQC.MQFMT_STRING;
-		putMessage.replyToQueueName = "QL.DW.REP";
-		putMessage.writeString(data);
-		putMessage.persistence = 1;
-//		putMessage.messageId = "99999".getBytes();
-		putMessage.messageId = MQC.MQMI_NONE;
-		return putMessage;
-	}
+//	public default MQMessage putMessages(String data) throws IOException {
+//		MQMessage putMessage = new MQMessage();
+//		putMessage.priority = 5;
+//		putMessage.characterSet = 1208;
+//		putMessage.replyToQueueManagerName = "QMDW01";
+//		putMessage.format = MQC.MQFMT_STRING;
+//		putMessage.replyToQueueName = "QL.DW.REP";
+//		putMessage.writeString(data);
+//		putMessage.persistence = 1;
+//		putMessage.messageId = MQC.MQMI_NONE;
+//		return putMessage;
+//	}
 
-	default void extracted(MQMessage putData, Document data, MQMessage getMQMessageData) throws XpathException,
+	default void extracted(MQMessage putMQMessageData, Document putXmlData, MQMessage getMQMessageData) throws XpathException,
 			ParserConfigurationException, SAXException, IOException, ParseException, TransformerException {
-
+		
+		assertNotNull(getMQMessageData);
+		
 		String getStringData = mqMessageToString(getMQMessageData);
 		Document getDocumentData = stringToDocument(getStringData);
 
 		assertThat(getMQMessageData.replyToQueueManagerName.trim()).isEqualTo(getQmgr());
 		assertThat(getMQMessageData.replyToQueueName.trim()).isEqualTo(QL_DH_REP.getQNames());
 		String xServiceId = xPath(getDocumentData, SERVICEID_Tab);
-//		String xServiceId =null;
 		boolean f = "F".equals(xServiceId.substring(1, 2));
-//		System.out.println("kkkkkkkkkkkkkk" + serviceId);
 		if (f) {
-			assertThat(getMQMessageData.characterSet).isEqualTo(putData.characterSet);
+			assertThat(getMQMessageData.characterSet).isEqualTo(putMQMessageData.characterSet);
 		} else {
 			assertThat(getMQMessageData.characterSet).isEqualTo(943);
 		}
-		assertThat(getMQMessageData.priority).isEqualTo(putData.priority);
-		assertThat(getMQMessageData.persistence).isEqualTo(putData.persistence);
-		assertThat(getMQMessageData.messageType).isEqualTo(putData.messageType);
-		assertThat(getMQMessageData.format.trim()).isEqualTo(putData.format.trim());
-		assertThat(getMQMessageData.expiry).isEqualTo(putData.expiry);
-//		String a = mqMessageToString(getData);
-//
-//		System.out.println(a);
-//		Document d = stringToDocument(a);
-//		String b = mqMessageToString(putData);
-//		Document c = stringToDocument(b);
+		assertThat(getMQMessageData.priority).isEqualTo(putMQMessageData.priority);
+		assertThat(getMQMessageData.persistence).isEqualTo(putMQMessageData.persistence);
+		assertThat(getMQMessageData.messageType).isEqualTo(putMQMessageData.messageType);
+		assertThat(getMQMessageData.format.trim()).isEqualTo(putMQMessageData.format.trim());
+		assertThat(getMQMessageData.expiry).isEqualTo(putMQMessageData.expiry);
 		assertThat(getMQMessageData.applicationIdData.trim()).isEqualTo(xPath(getDocumentData, SERVICEID_Tab));
 		assertThat(xPath(getDocumentData, RC_Tab)).isEqualTo("00");
-		assertThat(xPath(getDocumentData, R_PVR_Tab)).isEqualTo(putData.replyToQueueManagerName);
-		assertThat(xPath(getDocumentData, R_DST_Tab)).isEqualTo(putData.replyToQueueName);
+		assertThat(xPath(getDocumentData, R_PVR_Tab)).isEqualTo(putMQMessageData.replyToQueueManagerName);
+		assertThat(xPath(getDocumentData, R_DST_Tab)).isEqualTo(putMQMessageData.replyToQueueName);
 		if (!f) {
 			assertThat(xPath(getDocumentData, D1_Tab)).isEqualTo("¥¥");
 			assertThat(xPath(getDocumentData, D2_Tab)).isEqualTo("‾‾");
 		}
-		int putCount = xPathCount(data, TS_Tab);
+		int putCount = xPathCount(putXmlData, TS_Tab);
 		int getCount = xPathCount(getDocumentData, TS_Tab);
-//		assertThat(xPath(d, "/CENTER/GLB_HEAD/TIMESTAMP/TS[2]/@LVL")).isEqualTo("1");
-//		assertThat(xPath(d, "/CENTER/GLB_HEAD/TIMESTAMP/TS[3]/@LVL")).isEqualTo("2");
-//		assertThat(xPath(d, "/CENTER/GLB_HEAD/TIMESTAMP/TS[2]/@KBN")).isEqualTo(xPath(data, "/CENTER/GLB_HEAD/KUBUN"));
-//		assertThat(xPath(d, "/CENTER/GLB_HEAD/TIMESTAMP/TS[3]/@KBN")).isEqualTo(xPath(data, "/CENTER/GLB_HEAD/KUBUN"));
-//		assertThat(xPath(d, "/CENTER/GLB_HEAD/TIMESTAMP/TS[2]/@SVR")).isEqualTo("RSHUBFX");
-//		assertThat(xPath(d, "/CENTER/GLB_HEAD/TIMESTAMP/TS[3]/@SVR")).isEqualTo("RSHUBFX");
-//		assertThat(xPath(d, "/CENTER/GLB_HEAD/TIMESTAMP/TS[2]/@SVC"))
-//				.isEqualTo(xPath(data, "/CENTER/GLB_HEAD/SERVICEID"));
-//		assertThat(xPath(d, "/CENTER/GLB_HEAD/TIMESTAMP/TS[3]/@SVC"))
-//				.isEqualTo(xPath(data, "/CENTER/GLB_HEAD/SERVICEID"));
 
 		for (int i = 1; i <= putCount; i++) {
 			assertThat(xPath(getDocumentData, "/CENTER/GLB_HEAD/TIMESTAMP/TS[" + i + "]"))
-					.isEqualTo(xPath(data, "/CENTER/GLB_HEAD/TIMESTAMP/TS[" + i + "]"));
+					.isEqualTo(xPath(putXmlData, "/CENTER/GLB_HEAD/TIMESTAMP/TS[" + i + "]"));
 			assertThat(xPath(getDocumentData, "/CENTER/GLB_HEAD/TIMESTAMP/TS[" + i + "]/@SVR"))
-					.isEqualTo(xPath(data, "/CENTER/GLB_HEAD/TIMESTAMP/TS[" + i + "]/@SVR"));
+					.isEqualTo(xPath(putXmlData, "/CENTER/GLB_HEAD/TIMESTAMP/TS[" + i + "]/@SVR"));
 			assertThat(xPath(getDocumentData, "/CENTER/GLB_HEAD/TIMESTAMP/TS[" + i + "]/@KBN"))
-					.isEqualTo(xPath(data, "/CENTER/GLB_HEAD/TIMESTAMP/TS[" + i + "]/@KBN"));
+					.isEqualTo(xPath(putXmlData, "/CENTER/GLB_HEAD/TIMESTAMP/TS[" + i + "]/@KBN"));
 			assertThat(xPath(getDocumentData, "/CENTER/GLB_HEAD/TIMESTAMP/TS[" + i + "]/@LVL"))
-					.isEqualTo(xPath(data, "/CENTER/GLB_HEAD/TIMESTAMP/TS[" + i + "]/@LVL"));
+					.isEqualTo(xPath(putXmlData, "/CENTER/GLB_HEAD/TIMESTAMP/TS[" + i + "]/@LVL"));
 			assertThat(xPath(getDocumentData, "/CENTER/GLB_HEAD/TIMESTAMP/TS[" + i + "]/@SVC"))
-					.isEqualTo(xPath(data, "/CENTER/GLB_HEAD/TIMESTAMP/TS[" + i + "]/@SVC"));
+					.isEqualTo(xPath(putXmlData, "/CENTER/GLB_HEAD/TIMESTAMP/TS[" + i + "]/@SVC"));
 		}
 
 		for (int i = putCount + 1; i <= getCount; i++) {
 			assertThat(xPath(getDocumentData, "/CENTER/GLB_HEAD/TIMESTAMP/TS[" + i + "]/@SVR")).isEqualTo("RSHUBFX");
 			assertThat(xPath(getDocumentData, "/CENTER/GLB_HEAD/TIMESTAMP/TS[" + i + "]/@KBN"))
-					.isEqualTo(xPath(data, "/CENTER/GLB_HEAD/KUBUN"));
+					.isEqualTo(xPath(putXmlData, "/CENTER/GLB_HEAD/KUBUN"));
 			int ff = i - putCount;
 			String as = String.valueOf(ff);
 			assertThat(xPath(getDocumentData, "/CENTER/GLB_HEAD/TIMESTAMP/TS[" + i + "]/@LVL")).isEqualTo(as);
 			assertThat(xPath(getDocumentData, "/CENTER/GLB_HEAD/TIMESTAMP/TS[" + i + "]/@SVC"))
-					.isEqualTo(xPath(data, SERVICEID_Tab));
+					.isEqualTo(xPath(putXmlData, SERVICEID_Tab));
 
-//			LocalDateTime nowDateTime = LocalDateTime.now(); 
-//			SimpleDateFormat sd = new SimpleDateFormat("yyyyMMddHHmmss");
 			String getDatePath = xPath(getDocumentData, "/CENTER/GLB_HEAD/TIMESTAMP/TS[" + i + "]");
 			String getDate = getDatePath.substring(0, 14);
 
-//	        Date tsData = sd.parse(ts);
 			System.out.println(getDate);
 			String getDateCorrelation = getDatePath.substring(14, 17);
 			System.out.println(getDateCorrelation);
@@ -268,39 +239,17 @@ public interface Super extends FFFF {
 
 			assertThat(getDateCorrelation).isEqualTo("000");
 
-			//
-//			List<String> nodeList = new ArrayList<>();
 			List<String> nodeList = new ArrayList<>(Arrays.asList("RC", "TIMESTAMP", "REPLY"));
 			if (!f) {
 				nodeList.add("D1");
 				nodeList.add("D2");
 			}
-//			nodeList.add("GGG");
-//			nodeList.add("TIMESTAMP");
-//			nodeList.add("REPLY");
 
 			if (!f)
 				getStringData = getStringData.replace("IBM-930", "UTF-8");
 
-			listPass(documentToString(data), getStringData, nodeList);
-
-			//			List<String> list = ArrayList<String>();
-//			list.add("RC");
-//			list.add("TIMESTAMP");
-//			list.add("REPLY");
-//
-//			final Diff diff = DiffBuilder.compare(data).withTest(d)
-//					.withNodeFilter(node -> !node.getNodeName().equals("RC")&&!node.getNodeName().equals("TIMESTAMP")&&!node.getNodeName().equals("REPLY")).build();
-//			Iterator<Difference> iter = diff.getDifferences().iterator();
-//			int size = 0;
-//			while (iter.hasNext()) {
-//				System.out.println(iter.next().toString());
-//				size++;
-//			}
-//			assertThat(size).isEqualTo(0);
-
+			listPass(documentToString(putXmlData), getStringData, nodeList);
 		}
-//		2020 08 18 13 18 03 000
 		System.out.println(putCount);
 		System.out.println(getCount);
 
@@ -309,7 +258,6 @@ public interface Super extends FFFF {
 	default void listPass(String putData, String getReplaceData, List<String> nodeList) {
 
 		final Diff diff = DiffBuilder.compare(putData).withTest(getReplaceData)
-//				.withNodeFilter(node -> !node.getNodeName().equals("RC")&&!node.getNodeName().equals("TIMESTAMP")&&!node.getNodeName().equals("REPLY")).build();
 				.withNodeFilter(node -> !nodeList.contains(node.getNodeName())).build();
 
 		Iterator<Difference> iter = diff.getDifferences().iterator();
@@ -329,7 +277,6 @@ public interface Super extends FFFF {
 	default String xPath(Document getData, String xmlPath) throws XpathException {
 
 		XpathEngine xp = XMLUnit.newXpathEngine();
-//		Document doc = XMLUnit.builControlDocument(data);
 		return xp.evaluate(xmlPath, getData);
 	}
 }

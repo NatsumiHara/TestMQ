@@ -14,7 +14,9 @@ public enum KKK {
 	
 	QC_DH_REQ("QC.DH.REQ"),
 	
-	QL_DH_REP("QL.DH.REP");
+	QL_DH_REP("QL.DH.REP"),
+	
+	QA_DH_DF("QA.DH.DF");
 	
 	public static final String QMFH01 = "QMFH01";
 	public static final String LOCALHOST = "localhost";

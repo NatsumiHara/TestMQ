@@ -2,7 +2,6 @@ package com.example.utils;
 
 import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.StringReader;
@@ -12,7 +11,6 @@ import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.Transformer;
-import javax.xml.transform.TransformerConfigurationException;
 import javax.xml.transform.TransformerException;
 import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
@@ -77,10 +75,7 @@ public interface FFFF {
 				str = sb.readLine();
 			}
 			return builder.toString();
-
 		}
-//		StringBuilder str = builder.append(sb);	
-
 	}
 
 	default String mqMessageToString(MQMessage m) throws IOException {
@@ -93,19 +88,4 @@ public interface FFFF {
 		return aaa;
 	}
 
-//	default String Encoding(MQMessage mm) {
-//		
-//
-////		BufferedReader b_reader = new BufferedReader(new InputStreamReader(new FileInputStream(file), "Shift-JIS"));
-//	StringBuilder builder = new StringBuilder();try(
-//	BufferedReader b_reader = new BufferedReader(new InputStreamReader(new FileInputStream(file), "Shift-JIS"));)
-//	{
-//		while (mm.getDataLength() > 0) {
-//			builder.append(mm.readLine()).append(System.lineSeparator());
-//
-//			String bbb = builder.toString();
-//		}
-//
-//		return bbb;
-//	}
 }
