@@ -1,7 +1,6 @@
-package com.example.utils;
+package com.example.tests;
 
-import static com.example.demo.XmlFileQname.QL_DH_REP;
-
+import static com.example.mq.ConstantQname.QL_DH_REP;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -30,9 +29,7 @@ import org.xmlunit.diff.Difference;
 import com.ibm.msg.client.wmq.compat.base.internal.MQC;
 import com.ibm.msg.client.wmq.compat.base.internal.MQMessage;
 
-public interface Test2 extends Conversion {
-
-	public String getQmgr();
+public interface CommonTest extends Mq {
 
 	public static final String TS_Tab = "/CENTER/GLB_HEAD/TIMESTAMP/TS";
 	public static final String D2_Tab = "/CENTER/FRAME/APL_DATA/D2";
@@ -75,7 +72,6 @@ public interface Test2 extends Conversion {
 			assertEquals("‾‾", xPath(getDocumentData, D2_Tab));
 		}
 		int putCount = xPathCount(putXmlData, TS_Tab);
-		System.out.println("aaaaaaaa" + putCount);
 		int getCount = xPathCount(getDocumentData, TS_Tab);
 
 		for (int i = 1; i <= putCount; i++) {
@@ -101,9 +97,7 @@ public interface Test2 extends Conversion {
 			String getDatePath = xPath(getDocumentData, TS_Tab + "[" + i + "]");
 			String getDate = getDatePath.substring(0, 14);
 
-			System.out.println(getDate);
 			String getDateCorrelation = getDatePath.substring(14, 17);
-			System.out.println(getDateCorrelation);
 			assertTrue(LocalDateTime.parse(getDate, DateTimeFormatter.ofPattern("yyyyMMddHHmmss"))
 					.isBefore(LocalDateTime.now()));
 
@@ -133,9 +127,6 @@ public interface Test2 extends Conversion {
 			listPass(documentToString(putXmlData), getStringData, nodeList);
 
 		}
-		System.out.println(putCount);
-		System.out.println(getCount);
-
 	}
 
 	default void listPass(String putData, String getReplaceData, List<String> nodeList) {
@@ -146,7 +137,7 @@ public interface Test2 extends Conversion {
 		Iterator<Difference> iter = diff.getDifferences().iterator();
 		int size = 0;
 		while (iter.hasNext()) {
-			System.out.println(iter.next().toString());
+			iter.next().toString();
 			size++;
 		}
 		assertEquals(0, size);
@@ -310,9 +301,7 @@ public interface Test2 extends Conversion {
 			String getDatePath = xPath(getDocumentData, TS_Tab + "[" + i + "]");
 			String getDate = getDatePath.substring(0, 14);
 
-			System.out.println(getDate);
 			String getDateCorrelation = getDatePath.substring(14, 17);
-			System.out.println(getDateCorrelation);
 			assertTrue(LocalDateTime.parse(getDate, DateTimeFormatter.ofPattern("yyyyMMddHHmmss"))
 					.isBefore(LocalDateTime.now()));
 
@@ -327,7 +316,6 @@ public interface Test2 extends Conversion {
 
 		String substringEncoding = getStringData.substring(getStringData.indexOf("encoding"),
 				getStringData.indexOf("\"UTF-8\"") + "\"UTF-8\"".length());
-		System.out.println(substringEncoding);
 		assertEquals(substringEncoding, "encoding=\"UTF-8\"");
 
 		if (!appF) {

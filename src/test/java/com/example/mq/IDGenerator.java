@@ -1,4 +1,4 @@
-package com.example.demo;
+package com.example.mq;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;

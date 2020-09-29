@@ -1,8 +1,6 @@
-package com.example.utils;
+package com.example.tests;
 
 import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.StringReader;
@@ -23,15 +21,13 @@ import org.xml.sax.SAXException;
 
 import com.ibm.msg.client.wmq.compat.base.internal.MQMessage;
 
-public interface Conversion {
-
-	
+public interface Xml {
 
 	default Document fileToDocument(String file) throws ParserConfigurationException, SAXException, IOException {
 
 		DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
 		DocumentBuilder builder = factory.newDocumentBuilder();
-		Document doc = builder.parse(new InputSource(getClass().getResourceAsStream("/"+file)));
+		Document doc = builder.parse(new InputSource(getClass().getResourceAsStream("/" + file)));
 		return doc;
 	}
 
@@ -56,7 +52,8 @@ public interface Conversion {
 	default String fileToString(String file) throws IOException {
 		String str = null;
 		StringBuilder builder = new StringBuilder();
-		try (BufferedReader sb = new BufferedReader(new InputStreamReader(getClass().getResourceAsStream("/"+file)));) {
+		try (BufferedReader sb = new BufferedReader(
+				new InputStreamReader(getClass().getResourceAsStream("/" + file)));) {
 			str = sb.readLine();
 			while (str != null) {
 				builder.append(str + System.lineSeparator());

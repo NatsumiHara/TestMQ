@@ -1,6 +1,6 @@
-package com.example.demo;
+package com.example.mq;
 
-public enum XmlFileQname {
+public enum ConstantQname {
 
 	QA_DH_DL("QA.DH.DL"),
 
@@ -63,7 +63,7 @@ public enum XmlFileQname {
 		return qNames;
 	}
 
-	private XmlFileQname(String qNames) {
+	private ConstantQname(String qNames) {
 		this.qNames = qNames;
 	}
 

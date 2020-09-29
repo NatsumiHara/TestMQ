@@ -1,66 +1,39 @@
-package com.example.demo;
+package com.example.mq;
 
-import static com.example.demo.XmlFileQname.*;
+import static com.example.mq.ConstantQname.*;
 
-import static com.example.demo.XmlFileQname.QA_DH_DF;
-import static com.example.demo.XmlFileQname.QC_DH_REQ;
-import static com.example.demo.XmlFileQname.QL_DH_ERR;
-import static com.example.demo.XmlFileQname.QL_DH_REQ;
-import static com.example.demo.XmlFileQname.QL_DW_REP;
-import static com.example.demo.XmlFileQname.QMFH01;
-import static com.example.demo.XmlFileQname.SYSTEM_BKR_CONFIG;
-import static com.example.demo.XmlFileQname.TEST3_XML;
-import static com.example.demo.XmlFileQname.TEST4_XML;
-import static com.example.demo.XmlFileQname.TEST5_XML;
-import static com.example.demo.XmlFileQname.TEST9_XML;
-import static com.example.demo.XmlFileQname._50014;
-
-import java.io.IOException;
-import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 import java.util.stream.Stream;
 
-import javax.xml.parsers.ParserConfigurationException;
-import javax.xml.transform.TransformerException;
-
-import org.custommonkey.xmlunit.exceptions.XpathException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.w3c.dom.Document;
-import org.xml.sax.SAXException;
 
-import com.example.utils.Conversion;
-import com.example.utils.Super;
-import com.example.utils.Test2;
+import com.example.tests.CommonTest;
 import com.ibm.msg.client.wmq.compat.base.internal.MQMessage;
 
-class RizaSampleApplicationTests implements Super, Conversion, IDGenerator, Test2 {
-
-//	private static final String TEST_XML = "/Users/webma/Documents/workspace/RizaSample/src/main/java/com/example/demo/test.xml";
+class FehubApplicationTest implements IDGenerator, CommonTest {
 
 	@BeforeEach
 	void before() throws Exception {
 
-		for (XmlFileQname k : values())
+		for (ConstantQname k : values())
 			clean(k.getQNames());
 	}
 
-	@ParameterizedTest
+	@ParameterizedTest(name = "Run{index}:putQName={0},getQName={1},xmlString={2}")
 	@MethodSource("testMq")
 	@DisplayName("要求テスト")
 	void requestTest(String putQName, String getQName, String xmlString) throws Exception {
 
-		System.out.println(putQName + "|" + getQName + "|" + xmlString);
 		String putQNames = "Q" + putQName + ".DH.REQ";
 		String getQNames = "QA.DH.D" + getQName;
-		System.out.println(putQNames);
 		String a = fileToString(xmlString);
 		String replaceServiceId = a.replace("<SERVICEID>", "<SERVICEID>D" + getQName);
 		MQMessage putData = putMessages(replaceServiceId);
@@ -79,10 +52,8 @@ class RizaSampleApplicationTests implements Super, Conversion, IDGenerator, Test
 		List<Arguments> list = new ArrayList<>();
 		for (Iterator<String> itr1 = Q.iterator(); itr1.hasNext();) {
 			String QX = itr1.next();
-			System.out.println(QX);
 			for (Iterator<String> itr2 = D.iterator(); itr2.hasNext();) {
 				String DX = itr2.next();
-				System.out.println(DX);
 				list.add(Arguments.of(QX, DX, TEST_XML));
 				list.add(Arguments.of(QX, DX, TEST2_XML));
 				list.add(Arguments.of(QX, DX, TEST3_XML));
@@ -108,7 +79,7 @@ class RizaSampleApplicationTests implements Super, Conversion, IDGenerator, Test
 
 	}
 
-	@ParameterizedTest
+	@ParameterizedTest(name = "Run{index}:putQName={0},xmlServiceId={1},xmlPath={2}")
 	@MethodSource("returnTest")
 	@DisplayName("要求戻りテスト")
 	void requestReturnTest(String putQName, String xmlServiceId, String xmlPath) throws Exception {
@@ -172,12 +143,11 @@ class RizaSampleApplicationTests implements Super, Conversion, IDGenerator, Test
 		return list.stream();
 	}
 
-	@ParameterizedTest
+	@ParameterizedTest(name = "Run{index}:putQName={0},getQName={1},xmlPath={2}")
 	@MethodSource("parseErrorTest")
 	@DisplayName("要求パースエラーテスト")
 	void requestParseError(String putQName, String getQName, String xmlPath) throws Exception {
 
-		System.out.println(putQName + "|" + getQName + "|" + xmlPath);
 		String putQNames = "Q" + putQName + ".DH.REQ";
 		String xmlStringData = fileToString(xmlPath);
 		String replaceServiceId = xmlStringData.replace("<SERVICEID>", "<SERVICEID>D" + getQName);
@@ -189,13 +159,12 @@ class RizaSampleApplicationTests implements Super, Conversion, IDGenerator, Test
 
 	}
 
-	@ParameterizedTest
+	@ParameterizedTest(name = "Run{index}:putQName={0},getQName={1},xmlPath={2}")
 	@MethodSource("parseErrorTest")
 	@DisplayName("要求デットレターテスト")
 	void requestDeadQError(String putQName, String getQName, String xmlPath) throws Exception {
 
 		try {
-			System.out.println(putQName + "|" + getQName + "|" + xmlPath);
 			String putQNames = "Q" + putQName + ".DH.REQ";
 			String xmlStringData = fileToString(xmlPath);
 			String replaceServiceId = xmlStringData.replace("<SERVICEID>", "<SERVICEID>D" + getQName);
@@ -236,7 +205,7 @@ class RizaSampleApplicationTests implements Super, Conversion, IDGenerator, Test
 		return aa.stream();
 	}
 
-	@ParameterizedTest
+	@ParameterizedTest(name = "Run{index}:putQName={0},xmlServiceId={1},xmlPath={2}")
 	@MethodSource("failureError")
 	@DisplayName("要求Failureエラーテスト")
 	void requestFailureError(String putQName, String xmlServiceId, String xmlPath) throws Exception {
@@ -279,7 +248,7 @@ class RizaSampleApplicationTests implements Super, Conversion, IDGenerator, Test
 		return list.stream();
 	}
 
-	@ParameterizedTest
+	@ParameterizedTest(name = "Run{index}:getQName={0},xmlString={1}")
 	@MethodSource("returnTestMq")
 	@DisplayName("応答テスト")
 	void responseTest(String getQName, String xmlString) throws Exception {
@@ -292,7 +261,6 @@ class RizaSampleApplicationTests implements Super, Conversion, IDGenerator, Test
 		MQMessage putData = putReplyMessages(stringXmlData, getQName);
 
 		put(QL_DH_REP.getQNames(), putData);
-		System.out.println(putData.applicationIdData);
 		MQMessage getData = get(replyQ, putData.messageId);
 		returnMqTest(putData, getData);
 
@@ -328,7 +296,7 @@ class RizaSampleApplicationTests implements Super, Conversion, IDGenerator, Test
 
 	}
 
-	@ParameterizedTest
+	@ParameterizedTest(name = "Run{index}:appId={0},xmlPath={1}")
 	@MethodSource("responseAppIdTest")
 	@DisplayName("応答戻りRcテスト")
 	void responseReturnRcTest(String appId, String xmlPath) throws Exception {
@@ -377,7 +345,7 @@ class RizaSampleApplicationTests implements Super, Conversion, IDGenerator, Test
 		return list.stream();
 	}
 
-	@ParameterizedTest
+	@ParameterizedTest(name = "Run{index}:appId={0},rc={1},xmlPath={2}")
 	@MethodSource("responseRcTest")
 	@DisplayName("応答戻りAppテスト")
 	void responseReturnAppIdTest(String appId, String rc, String xmlPath) throws Exception {
@@ -432,7 +400,7 @@ class RizaSampleApplicationTests implements Super, Conversion, IDGenerator, Test
 
 	}
 
-	@ParameterizedTest
+	@ParameterizedTest(name = "Run{index}:getQName={0},ReplyError={1},xmlString={2}")
 	@MethodSource("responseFailureErrorTest")
 	@DisplayName("応答戻りfailureエラーテスト")
 	void responseFailureErrorTest(String getQName, String ReplyError, String xmlString) throws Exception {
@@ -480,15 +448,15 @@ class RizaSampleApplicationTests implements Super, Conversion, IDGenerator, Test
 		return list.stream();
 	}
 
-	@ParameterizedTest
+	@ParameterizedTest(name = "Run{index}:appId={0},reply={1},xmlPath={2}")
 	@MethodSource("responseFailureRcErrorTest")
 	@DisplayName("応答戻りfailureRcエラーテスト")
-	void responseFailureRcErrorTest(String appId, String Reply, String xmlPath) throws Exception {
+	void responseFailureRcErrorTest(String appId, String reply, String xmlPath) throws Exception {
 
 		String stringXmlData = fileToString(xmlPath);
 		String replyQ = QL_DH_ERR.getQNames();
 
-		stringXmlData = stringXmlData.replace("</GLB_HEAD>", Reply + "</GLB_HEAD>");
+		stringXmlData = stringXmlData.replace("</GLB_HEAD>", reply + "</GLB_HEAD>");
 		stringXmlData = stringXmlData.replace("</GLB_HEAD>", "<RC>99</RC></GLB_HEAD>");
 
 		MQMessage putData = putReplyMessagesAppId(stringXmlData, appId);
@@ -529,7 +497,7 @@ class RizaSampleApplicationTests implements Super, Conversion, IDGenerator, Test
 		return list.stream();
 	}
 
-	@ParameterizedTest
+	@ParameterizedTest(name = "Run{index}:appId={0},rc={1},reply={2},xmlPath={3}")
 	@MethodSource("responseAppTest")
 	@DisplayName("応答戻りfailureAppエラーテスト")
 	void responseReturnAppTest(String appId, String rc, String reply, String xmlPath) throws Exception {
@@ -587,7 +555,7 @@ class RizaSampleApplicationTests implements Super, Conversion, IDGenerator, Test
 
 	}
 
-	@ParameterizedTest
+	@ParameterizedTest(name = "Run{index}:appId={0},xmlPath={1}")
 	@MethodSource("responseParseErrorTest")
 	@DisplayName("応答戻りパースエラーテスト")
 	void responseParseErrorTest(String appId, String xmlPath) throws Exception {
@@ -622,16 +590,16 @@ class RizaSampleApplicationTests implements Super, Conversion, IDGenerator, Test
 
 	}
 
-	@ParameterizedTest
+	@ParameterizedTest(name = "Run{index}:appId={0},reply={1},xmlPath={2}")
 	@MethodSource("responseDeadErrorTest")
 	@DisplayName("応答戻りデットレターテスト")
 	void responseDeadErrorTest(String appId, String reply, String xmlPath) throws Exception {
 
 		try {
 			String xmlStringData = fileToString(xmlPath);
-			
+
 			xmlStringData = xmlStringData.replace("</GLB_HEAD>", reply + "</GLB_HEAD>");
-			
+
 			MQMessage putData = putReplyMessages(xmlStringData, appId);
 			putDisabled(QL_DH_ERR.getQNames());
 			put(QL_DH_REP.getQNames(), putData);

@@ -1,9 +1,9 @@
-package com.example.utils;
+package com.example.tests;
 
 import java.io.IOException;
 import java.util.Objects;
 
-import com.example.demo.XmlFileQname;
+import com.example.mq.ConstantQname;
 import com.ibm.mq.MQException;
 import com.ibm.msg.client.wmq.compat.base.internal.MQC;
 import com.ibm.msg.client.wmq.compat.base.internal.MQEnvironment;
@@ -13,7 +13,7 @@ import com.ibm.msg.client.wmq.compat.base.internal.MQPutMessageOptions;
 import com.ibm.msg.client.wmq.compat.base.internal.MQQueue;
 import com.ibm.msg.client.wmq.compat.base.internal.MQQueueManager;
 
-public interface Super extends Conversion {
+public interface Mq extends Xml {
 
 	public String getQmgr();
 
@@ -55,7 +55,7 @@ public interface Super extends Conversion {
 		if (!"F".equals(getQName)) {
 			stringXmlData = stringXmlData.replace("encoding=\"UTF-8\"", "encoding=\"IBM-930\"");
 			putMessage.characterSet = 943;
-			
+
 			String d1D2 = stringXmlData.substring(stringXmlData.indexOf("<D1>"),
 					stringXmlData.indexOf("</D2>") + "</D2>".length());
 			stringXmlData = stringXmlData.replace(d1D2, "");
@@ -69,35 +69,34 @@ public interface Super extends Conversion {
 		putMessage.persistence = 1;
 		putMessage.messageId = MQC.MQMI_NONE;
 		return putMessage;
-		
+
 	}
-	
+
 	public default MQMessage putReplyMessagesAppId(String stringXmlData, String appId) throws IOException {
 		MQMessage putMessage = new MQMessage();
-		
+
 		if (!"DF".equals(appId)) {
 			stringXmlData = stringXmlData.replace("encoding=\"UTF-8\"", "encoding=\"IBM-930\"");
 			putMessage.characterSet = 943;
-			
+
 			String d1D2 = stringXmlData.substring(stringXmlData.indexOf("<D1>"),
 					stringXmlData.indexOf("</D2>") + "</D2>".length());
 			stringXmlData = stringXmlData.replace(d1D2, "");
 		} else {
 			putMessage.characterSet = 1208;
 		}
-		
-		putMessage.applicationIdData =appId;
+
+		putMessage.applicationIdData = appId;
 		putMessage.priority = 5;
 		putMessage.format = MQC.MQFMT_STRING;
 		putMessage.writeString(stringXmlData);
 		putMessage.persistence = 1;
 		putMessage.messageId = MQC.MQMI_NONE;
-		
-		
+
 		return putMessage;
 	}
 
-	public default void put(XmlFileQname constantQName, MQMessage putData) throws Exception {
+	public default void put(ConstantQname constantQName, MQMessage putData) throws Exception {
 		put(constantQName.getQNames(), putData);
 	}
 
@@ -123,7 +122,7 @@ public interface Super extends Conversion {
 		}
 	}
 
-	public default MQMessage get(XmlFileQname constantQName) throws Exception {
+	public default MQMessage get(ConstantQname constantQName) throws Exception {
 		return get(constantQName.getQNames());
 	}
 
@@ -179,7 +178,7 @@ public interface Super extends Conversion {
 		}
 	}
 
-	public default MQMessage get(XmlFileQname constantQname, byte[] messageId) throws Exception {
+	public default MQMessage get(ConstantQname constantQname, byte[] messageId) throws Exception {
 		return get(constantQname.getQNames(), messageId);
 	}
 
