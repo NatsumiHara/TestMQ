@@ -1,9 +1,8 @@
-package com.example.tests;
+package jp.co.acom.fehub.tests;
 
 import java.io.IOException;
 import java.util.Objects;
 
-import com.example.mq.ConstantQname;
 import com.ibm.mq.MQException;
 import com.ibm.msg.client.wmq.compat.base.internal.MQC;
 import com.ibm.msg.client.wmq.compat.base.internal.MQEnvironment;
@@ -13,7 +12,9 @@ import com.ibm.msg.client.wmq.compat.base.internal.MQPutMessageOptions;
 import com.ibm.msg.client.wmq.compat.base.internal.MQQueue;
 import com.ibm.msg.client.wmq.compat.base.internal.MQQueueManager;
 
-public interface Mq extends Xml {
+import jp.co.acom.fehub.mq.ConstantQname;
+
+public interface Mq  {
 
 	public String getQmgr();
 

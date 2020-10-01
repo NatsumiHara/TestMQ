@@ -1,4 +1,6 @@
-package com.example.tests;
+package jp.co.acom.fehub.tests;
+
+import static jp.co.acom.fehub.mq.ConstantQname.QL_DW_REP;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -22,6 +24,8 @@ import org.xml.sax.SAXException;
 import com.ibm.msg.client.wmq.compat.base.internal.MQMessage;
 
 public interface Xml {
+	
+	public String getQmgr();
 
 	default Document fileToDocument(String file) throws ParserConfigurationException, SAXException, IOException {
 
@@ -71,6 +75,43 @@ public interface Xml {
 
 		String aaa = builder.toString();
 		return aaa;
+	}
+	
+	default String replaceSerId(String xmlData, String getQName) {
+		return xmlData.replace("<SERVICEID>", "<SERVICEID>D" + getQName);
+	}
+	
+	default String replacePluralSerId(String xmlData, String xmlServiceId) {
+		if (xmlServiceId == null) {
+			xmlData = xmlData.replace("<SERVICEID></SERVICEID>", "");
+		} else {
+			xmlData = xmlData.replace("<SERVICEID></SERVICEID>",
+					"<SERVICEID>" + xmlServiceId + "</SERVICEID>");	
+		}return xmlData;
+	}
+	
+	default String replaceReply(String stringXmlData,String replyQ) {
+		
+		stringXmlData = stringXmlData.replace("</GLB_HEAD>",
+				"<REPLY><R_PVR>" + getQmgr() + "</R_PVR><R_DST>" + replyQ + "</R_DST></REPLY></GLB_HEAD>");
+		return stringXmlData;
+	}
+	
+	default String replaceRc(String xmlData) {
+		return xmlData.replace("</GLB_HEAD>", "<RC>99</RC></GLB_HEAD>");
+	}
+	
+	default String replacePluralRc(String xmlData, String rc) {
+		if (rc == null) {
+			xmlData = xmlData.replace("</GLB_HEAD>", "</GLB_HEAD>");
+		} else {
+			xmlData = xmlData.replace("</GLB_HEAD>", "<RC>" + rc + "</RC></GLB_HEAD>");
+		}
+		return xmlData;
+	}
+	
+	default String replaceErrorReply(String stringXmlData, String ReplyError) {
+		return stringXmlData.replace("</GLB_HEAD>", ReplyError + "</GLB_HEAD>");
 	}
 
 }

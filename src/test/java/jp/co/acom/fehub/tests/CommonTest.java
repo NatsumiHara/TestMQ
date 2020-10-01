@@ -1,6 +1,6 @@
-package com.example.tests;
+package jp.co.acom.fehub.tests;
 
-import static com.example.mq.ConstantQname.QL_DH_REP;
+import static jp.co.acom.fehub.mq.ConstantQname.QL_DH_REP;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -29,7 +29,7 @@ import org.xmlunit.diff.Difference;
 import com.ibm.msg.client.wmq.compat.base.internal.MQC;
 import com.ibm.msg.client.wmq.compat.base.internal.MQMessage;
 
-public interface CommonTest extends Mq {
+public interface CommonTest extends Mq,Xml {
 
 	public static final String TS_Tab = "/CENTER/GLB_HEAD/TIMESTAMP/TS";
 	public static final String D2_Tab = "/CENTER/FRAME/APL_DATA/D2";

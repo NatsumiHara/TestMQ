@@ -1,4 +1,4 @@
-package com.example.mq;
+package jp.co.acom.fehub.mq;
 
 public enum ConstantQname {
 

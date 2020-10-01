@@ -1,6 +1,6 @@
-package com.example.mq;
+package jp.co.acom.fehub.mq;
 
-import static com.example.mq.ConstantQname.*;
+import static jp.co.acom.fehub.mq.ConstantQname.*;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -15,8 +15,9 @@ import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.w3c.dom.Document;
 
-import com.example.tests.CommonTest;
 import com.ibm.msg.client.wmq.compat.base.internal.MQMessage;
+
+import jp.co.acom.fehub.tests.CommonTest;
 
 class FehubApplicationTest implements IDGenerator, CommonTest {
 
@@ -35,7 +36,7 @@ class FehubApplicationTest implements IDGenerator, CommonTest {
 		String putQNames = "Q" + putQName + ".DH.REQ";
 		String getQNames = "QA.DH.D" + getQName;
 		String a = fileToString(xmlString);
-		String replaceServiceId = a.replace("<SERVICEID>", "<SERVICEID>D" + getQName);
+		String replaceServiceId = replaceSerId(a, getQName);
 		MQMessage putData = putMessages(replaceServiceId);
 		putData.replyToQueueName = QL_DW_REP.getQNames();
 		put(putQNames, putData);
@@ -86,23 +87,16 @@ class FehubApplicationTest implements IDGenerator, CommonTest {
 
 		String putQNames = "Q" + putQName + ".DH.REQ";
 		String stringXmlData = fileToString(xmlPath);
-		if (xmlServiceId == null) {
-			stringXmlData = stringXmlData.replace("<SERVICEID></SERVICEID>", "");
-		} else {
-			stringXmlData = stringXmlData.replace("<SERVICEID></SERVICEID>",
-					"<SERVICEID>" + xmlServiceId + "</SERVICEID>");
-		}
-		Document aaa = stringToDocument(stringXmlData);
+		String xmlData = replacePluralSerId(stringXmlData, xmlServiceId);
+		Document aaa = stringToDocument(xmlData);
 		String a = xPath(aaa, SERVICEID_Tab);
-
 		String rc;
 		if ("DA".equals(xmlServiceId)) {
 			rc = "02";
 		} else {
 			rc = "01";
 		}
-
-		MQMessage putData = putMessages(stringXmlData);
+		MQMessage putData = putMessages(xmlData);
 		putData.replyToQueueName = QL_DW_REP.getQNames();
 		put(putQNames, putData);
 		MQMessage getData = get(QL_DW_REP.getQNames(), putData.messageId);
@@ -150,7 +144,7 @@ class FehubApplicationTest implements IDGenerator, CommonTest {
 
 		String putQNames = "Q" + putQName + ".DH.REQ";
 		String xmlStringData = fileToString(xmlPath);
-		String replaceServiceId = xmlStringData.replace("<SERVICEID>", "<SERVICEID>D" + getQName);
+		String replaceServiceId = replaceSerId(xmlStringData, getQName);
 		MQMessage putData = putMessages(replaceServiceId);
 		putData.replyToQueueName = QL_DW_REP.getQNames();
 		put(putQNames, putData);
@@ -167,7 +161,7 @@ class FehubApplicationTest implements IDGenerator, CommonTest {
 		try {
 			String putQNames = "Q" + putQName + ".DH.REQ";
 			String xmlStringData = fileToString(xmlPath);
-			String replaceServiceId = xmlStringData.replace("<SERVICEID>", "<SERVICEID>D" + getQName);
+			String replaceServiceId = replaceSerId(xmlStringData, getQName);
 			MQMessage putData = putMessages(replaceServiceId);
 			putDisabled(QL_DH_ERR.getQNames());
 			put(putQNames, putData);
@@ -212,15 +206,8 @@ class FehubApplicationTest implements IDGenerator, CommonTest {
 
 		String putQNames = "Q" + putQName + ".DH.REQ";
 		String stringXmlData = fileToString(xmlPath);
-		if (xmlServiceId == null) {
-			stringXmlData = stringXmlData.replace("<SERVICEID></SERVICEID>", "");
-		} else {
-			stringXmlData = stringXmlData.replace("<SERVICEID></SERVICEID>",
-					"<SERVICEID>" + xmlServiceId + "</SERVICEID>");
-
-		}
-		MQMessage putData = putMessages(stringXmlData);
-
+		String xmlData = replacePluralSerId(stringXmlData, xmlServiceId);
+		MQMessage putData = putMessages(xmlData);
 		put(putQNames, putData);
 		MQMessage getData = get_wait(QL_DH_ERR.getQNames());
 		errorQTest(putData, getData);
@@ -254,12 +241,9 @@ class FehubApplicationTest implements IDGenerator, CommonTest {
 	void responseTest(String getQName, String xmlString) throws Exception {
 
 		String stringXmlData = fileToString(xmlString);
-
 		String replyQ = QL_DW_REP.getQNames();
-		stringXmlData = stringXmlData.replace("</GLB_HEAD>",
-				"<REPLY><R_PVR>" + getQmgr() + "</R_PVR><R_DST>" + replyQ + "</R_DST></REPLY></GLB_HEAD>");
-		MQMessage putData = putReplyMessages(stringXmlData, getQName);
-
+		String xmlData = replaceReply(stringXmlData, replyQ);
+		MQMessage putData = putReplyMessages(xmlData, getQName);
 		put(QL_DH_REP.getQNames(), putData);
 		MQMessage getData = get(replyQ, putData.messageId);
 		returnMqTest(putData, getData);
@@ -304,12 +288,10 @@ class FehubApplicationTest implements IDGenerator, CommonTest {
 		String stringXmlData = fileToString(xmlPath);
 
 		String replyQ = QL_DW_REP.getQNames();
-		stringXmlData = stringXmlData.replace("</GLB_HEAD>",
-				"<REPLY><R_PVR>" + getQmgr() + "</R_PVR><R_DST>" + replyQ + "</R_DST></REPLY></GLB_HEAD>");
+		String xmlData = replaceReply(stringXmlData, replyQ);
+		xmlData = replaceRc(xmlData);
 
-		stringXmlData = stringXmlData.replace("</GLB_HEAD>", "<RC>99</RC></GLB_HEAD>");
-
-		MQMessage putData = putReplyMessagesAppId(stringXmlData, appId);
+		MQMessage putData = putReplyMessagesAppId(xmlData, appId);
 
 		put(QL_DH_REP.getQNames(), putData);
 		MQMessage getData = get(replyQ, putData.messageId);
@@ -351,17 +333,10 @@ class FehubApplicationTest implements IDGenerator, CommonTest {
 	void responseReturnAppIdTest(String appId, String rc, String xmlPath) throws Exception {
 
 		String stringXmlData = fileToString(xmlPath);
-
 		String replyQ = QL_DW_REP.getQNames();
-		stringXmlData = stringXmlData.replace("</GLB_HEAD>",
-				"<REPLY><R_PVR>" + getQmgr() + "</R_PVR><R_DST>" + replyQ + "</R_DST></REPLY></GLB_HEAD>");
-
-		if (rc == null) {
-			stringXmlData = stringXmlData.replace("</GLB_HEAD>", "</GLB_HEAD>");
-		} else {
-			stringXmlData = stringXmlData.replace("</GLB_HEAD>", "<RC>" + rc + "</RC></GLB_HEAD>");
-		}
-		MQMessage putData = putReplyMessagesAppId(stringXmlData, appId);
+		String xmlData = replaceReply(stringXmlData, replyQ);
+		xmlData = replacePluralRc(xmlData,rc);
+		MQMessage putData = putReplyMessagesAppId(xmlData, appId);
 		put(QL_DH_REP.getQNames(), putData);
 		MQMessage getData = get(replyQ, putData.messageId);
 		returnQTest(putData, getData, "01", appId);
@@ -405,12 +380,10 @@ class FehubApplicationTest implements IDGenerator, CommonTest {
 	@DisplayName("応答戻りfailureエラーテスト")
 	void responseFailureErrorTest(String getQName, String ReplyError, String xmlString) throws Exception {
 
-		String stringXmlData = fileToString(xmlString);
-
+		String stringXmlData = fileToString(xmlString);		
 		String replyQ = QL_DH_ERR.getQNames();
-		stringXmlData = stringXmlData.replace("</GLB_HEAD>", ReplyError + "</GLB_HEAD>");
-
-		MQMessage putData = putReplyMessages(stringXmlData, getQName);
+		String xmlData = replaceErrorReply(stringXmlData, ReplyError);
+		MQMessage putData = putReplyMessages(xmlData, getQName);
 		put(QL_DH_REP.getQNames(), putData);
 		MQMessage getData = get_wait(replyQ);
 		errorQTest(putData, getData);
@@ -455,11 +428,9 @@ class FehubApplicationTest implements IDGenerator, CommonTest {
 
 		String stringXmlData = fileToString(xmlPath);
 		String replyQ = QL_DH_ERR.getQNames();
-
-		stringXmlData = stringXmlData.replace("</GLB_HEAD>", reply + "</GLB_HEAD>");
-		stringXmlData = stringXmlData.replace("</GLB_HEAD>", "<RC>99</RC></GLB_HEAD>");
-
-		MQMessage putData = putReplyMessagesAppId(stringXmlData, appId);
+		String xmlData = replaceErrorReply(stringXmlData, reply);
+		xmlData = replaceRc(xmlData);
+		MQMessage putData = putReplyMessagesAppId(xmlData, appId);
 		put(QL_DH_REP.getQNames(), putData);
 		MQMessage getData = get_wait(replyQ);
 
@@ -505,15 +476,9 @@ class FehubApplicationTest implements IDGenerator, CommonTest {
 		String stringXmlData = fileToString(xmlPath);
 
 		String replyQ = QL_DH_ERR.getQNames();
-
-		stringXmlData = stringXmlData.replace("</GLB_HEAD>", reply + "</GLB_HEAD>");
-
-		if (rc == null) {
-			stringXmlData = stringXmlData.replace("</GLB_HEAD>", "</GLB_HEAD>");
-		} else {
-			stringXmlData = stringXmlData.replace("</GLB_HEAD>", "<RC>" + rc + "</RC></GLB_HEAD>");
-		}
-		MQMessage putData = putReplyMessagesAppId(stringXmlData, appId);
+		String xmlData = replaceErrorReply(stringXmlData, reply);
+		xmlData = replacePluralRc(xmlData, rc);
+		MQMessage putData = putReplyMessagesAppId(xmlData, appId);
 		put(QL_DH_REP.getQNames(), putData);
 		MQMessage getData = get_wait(replyQ);
 		errorQTest(putData, getData);
@@ -597,9 +562,7 @@ class FehubApplicationTest implements IDGenerator, CommonTest {
 
 		try {
 			String xmlStringData = fileToString(xmlPath);
-
-			xmlStringData = xmlStringData.replace("</GLB_HEAD>", reply + "</GLB_HEAD>");
-
+			xmlStringData = replaceErrorReply(xmlStringData, reply);
 			MQMessage putData = putReplyMessages(xmlStringData, appId);
 			putDisabled(QL_DH_ERR.getQNames());
 			put(QL_DH_REP.getQNames(), putData);

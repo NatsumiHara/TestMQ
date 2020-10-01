@@ -1,4 +1,4 @@
-package com.example.mq;
+package jp.co.acom.fehub.mq;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
