@@ -14,7 +14,7 @@ import com.ibm.msg.client.wmq.compat.base.internal.MQQueueManager;
 
 import jp.co.acom.fehub.mq.ConstantQname;
 
-public interface Mq  {
+public interface Mq {
 
 	public String getQmgr();
 
@@ -25,10 +25,10 @@ public interface Mq  {
 	public int getPort();
 
 	public default void clean(String qName) throws Exception {
-		MQMessage qu;
+		MQMessage putQName;
 		do {
-			qu = get(qName);
-		} while (qu != null);
+			putQName = get(qName);
+		} while (putQName != null);
 	}
 
 	public default void setMQEnvironment() throws Exception {
@@ -194,14 +194,14 @@ public interface Mq  {
 	default void alterQueue(String qName, int[] column, int[] value) throws Exception {
 		this.setMQEnvironment();
 		MQQueueManager qmgr = null;
-		MQQueue q = null;
+		MQQueue mq = null;
 		try {
 			qmgr = new MQQueueManager(getQmgr());
 			qmgr.accessQueue(qName, MQC.MQOO_SET).set(column, value, null);
 			;
 		} finally {
-			if (Objects.nonNull(q))
-				q.close();
+			if (Objects.nonNull(mq))
+				mq.close();
 			if (Objects.nonNull(qmgr))
 				qmgr.disconnect();
 		}

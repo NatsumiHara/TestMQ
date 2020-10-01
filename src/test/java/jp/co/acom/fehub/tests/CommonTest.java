@@ -151,7 +151,7 @@ public interface CommonTest extends Mq,Xml {
 	default String xPath(Document getData, String xmlPath) throws XpathException {
 
 		XpathEngine xp = XMLUnit.newXpathEngine();
-		return xp.evaluate(xmlPath, getData);
+		return xp.evaluate(xmlPath, getData);//TODO
 	}
 
 	default void returnQTest(MQMessage putMQMessage, MQMessage getMQMessage, String rc, String appOrService)
@@ -251,8 +251,8 @@ public interface CommonTest extends Mq,Xml {
 	default void returnMqTest(MQMessage putMQMessageData, MQMessage getMQMessageData)
 			throws IOException, ParserConfigurationException, SAXException, XpathException, TransformerException {
 
-		String pp = mqMessageToString(putMQMessageData);
-		Document putXmlData = stringToDocument(pp);
+		String putStringXmlData = mqMessageToString(putMQMessageData);
+		Document putDocumentXmlData = stringToDocument(putStringXmlData);
 		assertNotNull(getMQMessageData);
 
 		String getStringData = mqMessageToString(getMQMessageData);
@@ -274,25 +274,25 @@ public interface CommonTest extends Mq,Xml {
 		assertEquals(putMQMessageData.applicationIdData.trim(), getMQMessageData.applicationIdData.trim());
 		assertEquals("00", xPath(getDocumentData, RC_Tab));
 
-		int putCount = xPathCount(putXmlData, TS_Tab);
+		int putCount = xPathCount(putDocumentXmlData, TS_Tab);
 		int getCount = xPathCount(getDocumentData, TS_Tab);
 
 		for (int i = 1; i <= putCount; i++) {
-			assertEquals(xPath(putXmlData, TS_Tab + "[" + i + "]"), xPath(getDocumentData, TS_Tab + "[" + i + "]"));
-			assertEquals(xPath(putXmlData, TS_Tab + "[" + i + "]/@SVR"),
+			assertEquals(xPath(putDocumentXmlData, TS_Tab + "[" + i + "]"), xPath(getDocumentData, TS_Tab + "[" + i + "]"));
+			assertEquals(xPath(putDocumentXmlData, TS_Tab + "[" + i + "]/@SVR"),
 					xPath(getDocumentData, TS_Tab + "[" + i + "]/@SVR"));
-			assertEquals(xPath(putXmlData, TS_Tab + "[" + i + "]/@KBN"),
+			assertEquals(xPath(putDocumentXmlData, TS_Tab + "[" + i + "]/@KBN"),
 					xPath(getDocumentData, TS_Tab + "[" + i + "]/@KBN"));
-			assertEquals(xPath(putXmlData, TS_Tab + "[" + i + "]/@LVL"),
+			assertEquals(xPath(putDocumentXmlData, TS_Tab + "[" + i + "]/@LVL"),
 					xPath(getDocumentData, TS_Tab + "[" + i + "]/@LVL"));
-			assertEquals(xPath(putXmlData, TS_Tab + "[" + i + "]/@SVC"),
+			assertEquals(xPath(putDocumentXmlData, TS_Tab + "[" + i + "]/@SVC"),
 					xPath(getDocumentData, TS_Tab + "[" + i + "]/@SVC"));
 
 		}
 
 		for (int i = putCount + 1; i <= getCount; i++) {
 			assertEquals(getQmgr(), xPath(getDocumentData, TS_Tab + "[" + i + "]/@SVR"));
-			assertEquals(xPath(putXmlData, "2"), xPath(getDocumentData, TS_Tab + "[" + i + "]/@KBN"));
+			assertEquals(xPath(putDocumentXmlData, "2"), xPath(getDocumentData, TS_Tab + "[" + i + "]/@KBN"));
 			int lvlInt = getCount - (i - 1);
 			String lvlString = String.valueOf(lvlInt);
 			assertEquals(lvlString, xPath(getDocumentData, TS_Tab + "[" + i + "]/@LVL"));
@@ -311,8 +311,8 @@ public interface CommonTest extends Mq,Xml {
 
 		List<String> nodeList = new ArrayList<>(Arrays.asList("RC", "TIMESTAMP"));
 
-		assertEquals(xPath(putXmlData, R_DST_Tab), xPath(getDocumentData, R_DST_Tab));
-		assertEquals(xPath(putXmlData, R_PVR_Tab), xPath(getDocumentData, R_PVR_Tab));
+		assertEquals(xPath(putDocumentXmlData, R_DST_Tab), xPath(getDocumentData, R_DST_Tab));
+		assertEquals(xPath(putDocumentXmlData, R_PVR_Tab), xPath(getDocumentData, R_PVR_Tab));
 
 		String substringEncoding = getStringData.substring(getStringData.indexOf("encoding"),
 				getStringData.indexOf("\"UTF-8\"") + "\"UTF-8\"".length());
@@ -321,7 +321,7 @@ public interface CommonTest extends Mq,Xml {
 		if (!appF) {
 			getStringData = getStringData.replace("UTF-8", "IBM-930");
 
-			listPass(documentToString(putXmlData), getStringData, nodeList);
+			listPass(documentToString(putDocumentXmlData), getStringData, nodeList);
 		}
 	}
 

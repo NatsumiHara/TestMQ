@@ -33,14 +33,11 @@ class FehubApplicationTest implements IDGenerator, CommonTest {
 	@DisplayName("要求テスト")
 	void requestTest(String putQName, String getQName, String xmlString) throws Exception {
 
-		String putQNames = "Q" + putQName + ".DH.REQ";
-		String getQNames = "QA.DH.D" + getQName;
-		String a = fileToString(xmlString);
-		String replaceServiceId = replaceSerId(a, getQName);
+		String replaceServiceId = replaceSerId(fileToString(xmlString), getQName);
 		MQMessage putData = putMessages(replaceServiceId);
 		putData.replyToQueueName = QL_DW_REP.getQNames();
-		put(putQNames, putData);
-		MQMessage getData = get(getQNames, putData.messageId);
+		put("Q" + putQName + ".DH.REQ", putData);
+		MQMessage getData = get("QA.DH.D" + getQName, putData.messageId);
 		Document xmlData = stringToDocument(replaceServiceId);
 		extracted(putData, xmlData, getData);
 	}
@@ -88,8 +85,8 @@ class FehubApplicationTest implements IDGenerator, CommonTest {
 		String putQNames = "Q" + putQName + ".DH.REQ";
 		String stringXmlData = fileToString(xmlPath);
 		String xmlData = replacePluralSerId(stringXmlData, xmlServiceId);
-		Document aaa = stringToDocument(xmlData);
-		String a = xPath(aaa, SERVICEID_Tab);
+		Document documentXmlData = stringToDocument(xmlData);
+		String serviceId = xPath(documentXmlData, SERVICEID_Tab);
 		String rc;
 		if ("DA".equals(xmlServiceId)) {
 			rc = "02";
@@ -100,7 +97,7 @@ class FehubApplicationTest implements IDGenerator, CommonTest {
 		putData.replyToQueueName = QL_DW_REP.getQNames();
 		put(putQNames, putData);
 		MQMessage getData = get(QL_DW_REP.getQNames(), putData.messageId);
-		returnQTest(putData, getData, rc, a);
+		returnQTest(putData, getData, rc, serviceId);
 	}
 
 	static Stream<Arguments> returnTest() {
@@ -178,25 +175,25 @@ class FehubApplicationTest implements IDGenerator, CommonTest {
 		List<String> Q = Arrays.asList("C", "L");
 		List<String> D = Arrays.asList("L", "F");
 
-		List<Arguments> aa = new ArrayList<>();
-		for (Iterator<String> ittre = Q.iterator(); ittre.hasNext();) {
-			String QX = ittre.next();
-			for (Iterator<String> itr = D.iterator(); itr.hasNext();) {
-				String DX = itr.next();
+		List<Arguments> list = new ArrayList<>();
+		for (Iterator<String> itr1 = Q.iterator(); itr1.hasNext();) {
+			String QX = itr1.next();
+			for (Iterator<String> itr2 = D.iterator(); itr2.hasNext();) {
+				String DX = itr2.next();
 
-				aa.add(Arguments.of(QX, DX, TEST19_XML));
-				aa.add(Arguments.of(QX, DX, TEST20_XML));
-				aa.add(Arguments.of(QX, DX, TEST21_XML));
-				aa.add(Arguments.of(QX, DX, TEST22_XML));
-				aa.add(Arguments.of(QX, DX, TEST23_XML));
-				aa.add(Arguments.of(QX, DX, TEST24_XML));
-				aa.add(Arguments.of(QX, DX, TEST25_XML));
-				aa.add(Arguments.of(QX, DX, TEST26_XML));
-				aa.add(Arguments.of(QX, DX, TEST27_XML));
+//				list.add(Arguments.of(QX, DX, TEST19_XML));
+//				list.add(Arguments.of(QX, DX, TEST20_XML));
+//				list.add(Arguments.of(QX, DX, TEST21_XML));
+//				list.add(Arguments.of(QX, DX, TEST22_XML));
+//				list.add(Arguments.of(QX, DX, TEST23_XML));
+//				list.add(Arguments.of(QX, DX, TEST24_XML));
+//				list.add(Arguments.of(QX, DX, TEST25_XML));
+//				list.add(Arguments.of(QX, DX, TEST26_XML));
+				list.add(Arguments.of(QX, DX, TEST27_XML));
 
 			}
 		}
-		return aa.stream();
+		return list.stream();
 	}
 
 	@ParameterizedTest(name = "Run{index}:putQName={0},xmlServiceId={1},xmlPath={2}")
@@ -225,9 +222,9 @@ class FehubApplicationTest implements IDGenerator, CommonTest {
 			for (Iterator<String> itr2 = D.iterator(); itr2.hasNext();) {
 				String DX = itr2.next();
 
-				list.add(Arguments.of(QX, DX, TEST28_XML));
-				list.add(Arguments.of(QX, DX, TEST29_XML));
-				list.add(Arguments.of(QX, DX, TEST30_XML));
+//				list.add(Arguments.of(QX, DX, TEST28_XML));
+//				list.add(Arguments.of(QX, DX, TEST29_XML));
+//				list.add(Arguments.of(QX, DX, TEST30_XML));
 				list.add(Arguments.of(QX, DX, TEST_XML));
 
 			}
@@ -242,7 +239,7 @@ class FehubApplicationTest implements IDGenerator, CommonTest {
 
 		String stringXmlData = fileToString(xmlString);
 		String replyQ = QL_DW_REP.getQNames();
-		String xmlData = replaceReply(stringXmlData, replyQ);
+		String xmlData = replaceReply(stringXmlData, replyQ, getQmgr());
 		MQMessage putData = putReplyMessages(xmlData, getQName);
 		put(QL_DH_REP.getQNames(), putData);
 		MQMessage getData = get(replyQ, putData.messageId);
@@ -255,8 +252,8 @@ class FehubApplicationTest implements IDGenerator, CommonTest {
 		List<String> D = Arrays.asList("F", "L");
 
 		List<Arguments> list = new ArrayList<>();
-		for (Iterator<String> itr2 = D.iterator(); itr2.hasNext();) {
-			String DX = itr2.next();
+		for (Iterator<String> itr = D.iterator(); itr.hasNext();) {
+			String DX = itr.next();
 			list.add(Arguments.of(DX, TEST_XML));
 			list.add(Arguments.of(DX, TEST2_XML));
 			list.add(Arguments.of(DX, TEST3_XML));
@@ -288,7 +285,7 @@ class FehubApplicationTest implements IDGenerator, CommonTest {
 		String stringXmlData = fileToString(xmlPath);
 
 		String replyQ = QL_DW_REP.getQNames();
-		String xmlData = replaceReply(stringXmlData, replyQ);
+		String xmlData = replaceReply(stringXmlData, replyQ, getQmgr());
 		xmlData = replaceRc(xmlData);
 
 		MQMessage putData = putReplyMessagesAppId(xmlData, appId);
@@ -305,23 +302,23 @@ class FehubApplicationTest implements IDGenerator, CommonTest {
 		List<String> I = Arrays.asList("DF", "DL", "A", "");
 
 		List<Arguments> list = new ArrayList<>();
-		for (Iterator<String> itr1 = I.iterator(); itr1.hasNext();) {
-			String ID = itr1.next();
+		for (Iterator<String> itr = I.iterator(); itr.hasNext();) {
+			String ID = itr.next();
 
-			list.add(Arguments.of(ID, TEST_XML));
-			list.add(Arguments.of(ID, TEST2_XML));
-			list.add(Arguments.of(ID, TEST3_XML));
-			list.add(Arguments.of(ID, TEST4_XML));
-			list.add(Arguments.of(ID, TEST5_XML));
-			list.add(Arguments.of(ID, TEST6_XML));
-			list.add(Arguments.of(ID, TEST7_XML));
-			list.add(Arguments.of(ID, TEST8_XML));
-			list.add(Arguments.of(ID, TEST9_XML));
-			list.add(Arguments.of(ID, TEST10_XML));
-			list.add(Arguments.of(ID, TEST14_XML));
-			list.add(Arguments.of(ID, TEST15_XML));
-			list.add(Arguments.of(ID, TEST16_XML));
-			list.add(Arguments.of(ID, TEST17_XML));
+//			list.add(Arguments.of(ID, TEST_XML));
+//			list.add(Arguments.of(ID, TEST2_XML));
+//			list.add(Arguments.of(ID, TEST3_XML));
+//			list.add(Arguments.of(ID, TEST4_XML));
+//			list.add(Arguments.of(ID, TEST5_XML));
+//			list.add(Arguments.of(ID, TEST6_XML));
+//			list.add(Arguments.of(ID, TEST7_XML));
+//			list.add(Arguments.of(ID, TEST8_XML));
+//			list.add(Arguments.of(ID, TEST9_XML));
+//			list.add(Arguments.of(ID, TEST10_XML));
+//			list.add(Arguments.of(ID, TEST14_XML));
+//			list.add(Arguments.of(ID, TEST15_XML));
+//			list.add(Arguments.of(ID, TEST16_XML));
+//			list.add(Arguments.of(ID, TEST17_XML));
 			list.add(Arguments.of(ID, TEST18_XML));
 		}
 		return list.stream();
@@ -334,7 +331,7 @@ class FehubApplicationTest implements IDGenerator, CommonTest {
 
 		String stringXmlData = fileToString(xmlPath);
 		String replyQ = QL_DW_REP.getQNames();
-		String xmlData = replaceReply(stringXmlData, replyQ);
+		String xmlData = replaceReply(stringXmlData, replyQ, getQmgr());
 		xmlData = replacePluralRc(xmlData,rc);
 		MQMessage putData = putReplyMessagesAppId(xmlData, appId);
 		put(QL_DH_REP.getQNames(), putData);
@@ -354,20 +351,20 @@ class FehubApplicationTest implements IDGenerator, CommonTest {
 			for (Iterator<String> itr2 = R.iterator(); itr2.hasNext();) {
 				String RC = itr2.next();
 
-				list.add(Arguments.of(ID, RC, TEST_XML));
-				list.add(Arguments.of(ID, RC, TEST2_XML));
-				list.add(Arguments.of(ID, RC, TEST3_XML));
-				list.add(Arguments.of(ID, RC, TEST4_XML));
-				list.add(Arguments.of(ID, RC, TEST5_XML));
-				list.add(Arguments.of(ID, RC, TEST6_XML));
-				list.add(Arguments.of(ID, RC, TEST7_XML));
-				list.add(Arguments.of(ID, RC, TEST8_XML));
-				list.add(Arguments.of(ID, RC, TEST9_XML));
-				list.add(Arguments.of(ID, RC, TEST10_XML));
-				list.add(Arguments.of(ID, RC, TEST14_XML));
-				list.add(Arguments.of(ID, RC, TEST15_XML));
-				list.add(Arguments.of(ID, RC, TEST16_XML));
-				list.add(Arguments.of(ID, RC, TEST17_XML));
+//				list.add(Arguments.of(ID, RC, TEST_XML));
+//				list.add(Arguments.of(ID, RC, TEST2_XML));
+//				list.add(Arguments.of(ID, RC, TEST3_XML));
+//				list.add(Arguments.of(ID, RC, TEST4_XML));
+//				list.add(Arguments.of(ID, RC, TEST5_XML));
+//				list.add(Arguments.of(ID, RC, TEST6_XML));
+//				list.add(Arguments.of(ID, RC, TEST7_XML));
+//				list.add(Arguments.of(ID, RC, TEST8_XML));
+//				list.add(Arguments.of(ID, RC, TEST9_XML));
+//				list.add(Arguments.of(ID, RC, TEST10_XML));
+//				list.add(Arguments.of(ID, RC, TEST14_XML));
+//				list.add(Arguments.of(ID, RC, TEST15_XML));
+//				list.add(Arguments.of(ID, RC, TEST16_XML));
+//				list.add(Arguments.of(ID, RC, TEST17_XML));
 				list.add(Arguments.of(ID, RC, TEST18_XML));
 			}
 		}
@@ -392,30 +389,30 @@ class FehubApplicationTest implements IDGenerator, CommonTest {
 
 	static Stream<Arguments> responseFailureErrorTest() {
 
-		List<String> Q = Arrays.asList("F", "L");
+		List<String> D = Arrays.asList("F", "L");
 		List<String> ReplyError = Arrays.asList("", "<REPLY></REPLY>");
 
 		List<Arguments> list = new ArrayList<>();
-		for (Iterator<String> itr1 = Q.iterator(); itr1.hasNext();) {
+		for (Iterator<String> itr1 = D.iterator(); itr1.hasNext();) {
 			String DX = itr1.next();
 			for (Iterator<String> itr2 = ReplyError.iterator(); itr2.hasNext();) {
 				String Reply = itr2.next();
 				list.add(Arguments.of(DX, Reply, TEST_XML));
-				list.add(Arguments.of(DX, Reply, TEST2_XML));
-				list.add(Arguments.of(DX, Reply, TEST3_XML));
-				list.add(Arguments.of(DX, Reply, TEST4_XML));
-				list.add(Arguments.of(DX, Reply, TEST5_XML));
-				list.add(Arguments.of(DX, Reply, TEST6_XML));
-				list.add(Arguments.of(DX, Reply, TEST7_XML));
-				list.add(Arguments.of(DX, Reply, TEST8_XML));
-				list.add(Arguments.of(DX, Reply, TEST9_XML));
-				list.add(Arguments.of(DX, Reply, TEST10_XML));
-				list.add(Arguments.of(DX, Reply, TEST11_XML));
-				list.add(Arguments.of(DX, Reply, TEST13_XML));
-				list.add(Arguments.of(DX, Reply, TEST15_XML));
-				list.add(Arguments.of(DX, Reply, TEST16_XML));
-				list.add(Arguments.of(DX, Reply, TEST17_XML));
-				list.add(Arguments.of(DX, Reply, TEST18_XML));
+//				list.add(Arguments.of(DX, Reply, TEST2_XML));
+//				list.add(Arguments.of(DX, Reply, TEST3_XML));
+//				list.add(Arguments.of(DX, Reply, TEST4_XML));
+//				list.add(Arguments.of(DX, Reply, TEST5_XML));
+//				list.add(Arguments.of(DX, Reply, TEST6_XML));
+//				list.add(Arguments.of(DX, Reply, TEST7_XML));
+//				list.add(Arguments.of(DX, Reply, TEST8_XML));
+//				list.add(Arguments.of(DX, Reply, TEST9_XML));
+//				list.add(Arguments.of(DX, Reply, TEST10_XML));
+//				list.add(Arguments.of(DX, Reply, TEST11_XML));
+//				list.add(Arguments.of(DX, Reply, TEST13_XML));
+//				list.add(Arguments.of(DX, Reply, TEST15_XML));
+//				list.add(Arguments.of(DX, Reply, TEST16_XML));
+//				list.add(Arguments.of(DX, Reply, TEST17_XML));
+//				list.add(Arguments.of(DX, Reply, TEST18_XML));
 			}
 		}
 		return list.stream();
@@ -450,19 +447,19 @@ class FehubApplicationTest implements IDGenerator, CommonTest {
 				String Reply = itr2.next();
 
 				list.add(Arguments.of(ID, Reply, TEST_XML));
-				list.add(Arguments.of(ID, Reply, TEST2_XML));
-				list.add(Arguments.of(ID, Reply, TEST3_XML));
-				list.add(Arguments.of(ID, Reply, TEST4_XML));
-				list.add(Arguments.of(ID, Reply, TEST5_XML));
-				list.add(Arguments.of(ID, Reply, TEST6_XML));
-				list.add(Arguments.of(ID, Reply, TEST7_XML));
-				list.add(Arguments.of(ID, Reply, TEST8_XML));
-				list.add(Arguments.of(ID, Reply, TEST9_XML));
-				list.add(Arguments.of(ID, Reply, TEST10_XML));
-				list.add(Arguments.of(ID, Reply, TEST15_XML));
-				list.add(Arguments.of(ID, Reply, TEST16_XML));
-				list.add(Arguments.of(ID, Reply, TEST17_XML));
-				list.add(Arguments.of(ID, Reply, TEST18_XML));
+//				list.add(Arguments.of(ID, Reply, TEST2_XML));
+//				list.add(Arguments.of(ID, Reply, TEST3_XML));
+//				list.add(Arguments.of(ID, Reply, TEST4_XML));
+//				list.add(Arguments.of(ID, Reply, TEST5_XML));
+//				list.add(Arguments.of(ID, Reply, TEST6_XML));
+//				list.add(Arguments.of(ID, Reply, TEST7_XML));
+//				list.add(Arguments.of(ID, Reply, TEST8_XML));
+//				list.add(Arguments.of(ID, Reply, TEST9_XML));
+//				list.add(Arguments.of(ID, Reply, TEST10_XML));
+//				list.add(Arguments.of(ID, Reply, TEST15_XML));
+//				list.add(Arguments.of(ID, Reply, TEST16_XML));
+//				list.add(Arguments.of(ID, Reply, TEST17_XML));
+//				list.add(Arguments.of(ID, Reply, TEST18_XML));
 			}
 		}
 		return list.stream();
@@ -499,19 +496,19 @@ class FehubApplicationTest implements IDGenerator, CommonTest {
 				for (Iterator<String> itr3 = ReplyError.iterator(); itr3.hasNext();) {
 					String Reply = itr3.next();
 
-					list.add(Arguments.of(ID, RC, Reply, TEST_XML));
-					list.add(Arguments.of(ID, RC, Reply, TEST2_XML));
-					list.add(Arguments.of(ID, RC, Reply, TEST3_XML));
-					list.add(Arguments.of(ID, RC, Reply, TEST4_XML));
-					list.add(Arguments.of(ID, RC, Reply, TEST5_XML));
-					list.add(Arguments.of(ID, RC, Reply, TEST6_XML));
-					list.add(Arguments.of(ID, RC, Reply, TEST7_XML));
-					list.add(Arguments.of(ID, RC, Reply, TEST8_XML));
-					list.add(Arguments.of(ID, RC, Reply, TEST9_XML));
-					list.add(Arguments.of(ID, RC, Reply, TEST10_XML));
-					list.add(Arguments.of(ID, RC, Reply, TEST15_XML));
-					list.add(Arguments.of(ID, RC, Reply, TEST16_XML));
-					list.add(Arguments.of(ID, RC, Reply, TEST17_XML));
+//					list.add(Arguments.of(ID, RC, Reply, TEST_XML));
+//					list.add(Arguments.of(ID, RC, Reply, TEST2_XML));
+//					list.add(Arguments.of(ID, RC, Reply, TEST3_XML));
+//					list.add(Arguments.of(ID, RC, Reply, TEST4_XML));
+//					list.add(Arguments.of(ID, RC, Reply, TEST5_XML));
+//					list.add(Arguments.of(ID, RC, Reply, TEST6_XML));
+//					list.add(Arguments.of(ID, RC, Reply, TEST7_XML));
+//					list.add(Arguments.of(ID, RC, Reply, TEST8_XML));
+//					list.add(Arguments.of(ID, RC, Reply, TEST9_XML));
+//					list.add(Arguments.of(ID, RC, Reply, TEST10_XML));
+//					list.add(Arguments.of(ID, RC, Reply, TEST15_XML));
+//					list.add(Arguments.of(ID, RC, Reply, TEST16_XML));
+//					list.add(Arguments.of(ID, RC, Reply, TEST17_XML));
 					list.add(Arguments.of(ID, RC, Reply, TEST18_XML));
 				}
 			}
@@ -535,21 +532,21 @@ class FehubApplicationTest implements IDGenerator, CommonTest {
 
 	static Stream<Arguments> responseParseErrorTest() {
 
-		List<String> D = Arrays.asList("F", "L");
+		List<String> I = Arrays.asList("F", "L");
 
 		List<Arguments> list = new ArrayList<>();
-		for (Iterator<String> itr2 = D.iterator(); itr2.hasNext();) {
-			String DX = itr2.next();
+		for (Iterator<String> itr2 = I.iterator(); itr2.hasNext();) {
+			String ID = itr2.next();
 
-			list.add(Arguments.of(DX, TEST19_XML));
-			list.add(Arguments.of(DX, TEST20_XML));
-			list.add(Arguments.of(DX, TEST21_XML));
-			list.add(Arguments.of(DX, TEST22_XML));
-			list.add(Arguments.of(DX, TEST23_XML));
-			list.add(Arguments.of(DX, TEST24_XML));
-			list.add(Arguments.of(DX, TEST25_XML));
-			list.add(Arguments.of(DX, TEST26_XML));
-			list.add(Arguments.of(DX, TEST27_XML));
+			list.add(Arguments.of(ID, TEST19_XML));
+//			list.add(Arguments.of(ID, TEST20_XML));
+//			list.add(Arguments.of(ID, TEST21_XML));
+//			list.add(Arguments.of(ID, TEST22_XML));
+//			list.add(Arguments.of(ID, TEST23_XML));
+//			list.add(Arguments.of(ID, TEST24_XML));
+//			list.add(Arguments.of(ID, TEST25_XML));
+//			list.add(Arguments.of(ID, TEST26_XML));
+//			list.add(Arguments.of(ID, TEST27_XML));
 		}
 		return list.stream();
 
@@ -585,14 +582,14 @@ class FehubApplicationTest implements IDGenerator, CommonTest {
 			for (Iterator<String> itr2 = ReplyError.iterator(); itr2.hasNext();) {
 				String Reply = itr2.next();
 
-				list.add(Arguments.of(DX, Reply, TEST19_XML));
-				list.add(Arguments.of(DX, Reply, TEST20_XML));
-				list.add(Arguments.of(DX, Reply, TEST21_XML));
-				list.add(Arguments.of(DX, Reply, TEST22_XML));
-				list.add(Arguments.of(DX, Reply, TEST23_XML));
-				list.add(Arguments.of(DX, Reply, TEST24_XML));
-				list.add(Arguments.of(DX, Reply, TEST25_XML));
-				list.add(Arguments.of(DX, Reply, TEST26_XML));
+//				list.add(Arguments.of(DX, Reply, TEST19_XML));
+//				list.add(Arguments.of(DX, Reply, TEST20_XML));
+//				list.add(Arguments.of(DX, Reply, TEST21_XML));
+//				list.add(Arguments.of(DX, Reply, TEST22_XML));
+//				list.add(Arguments.of(DX, Reply, TEST23_XML));
+//				list.add(Arguments.of(DX, Reply, TEST24_XML));
+//				list.add(Arguments.of(DX, Reply, TEST25_XML));
+//				list.add(Arguments.of(DX, Reply, TEST26_XML));
 				list.add(Arguments.of(DX, Reply, TEST27_XML));
 			}
 		}

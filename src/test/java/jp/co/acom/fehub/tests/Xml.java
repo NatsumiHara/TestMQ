@@ -1,7 +1,5 @@
 package jp.co.acom.fehub.tests;
 
-import static jp.co.acom.fehub.mq.ConstantQname.QL_DW_REP;
-
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -24,8 +22,6 @@ import org.xml.sax.SAXException;
 import com.ibm.msg.client.wmq.compat.base.internal.MQMessage;
 
 public interface Xml {
-	
-	public String getQmgr();
 
 	default Document fileToDocument(String file) throws ParserConfigurationException, SAXException, IOException {
 
@@ -67,51 +63,49 @@ public interface Xml {
 		}
 	}
 
-	default String mqMessageToString(MQMessage m) throws IOException {
+	default String mqMessageToString(MQMessage mqMessage) throws IOException {
 		StringBuilder builder = new StringBuilder();
-		m.setDataOffset(0);
-		while (m.getDataLength() > 0)
-			builder.append(m.readLine()).append(System.lineSeparator());
+		mqMessage.setDataOffset(0);
+		while (mqMessage.getDataLength() > 0)
+			builder.append(mqMessage.readLine()).append(System.lineSeparator());
 
-		String aaa = builder.toString();
-		return aaa;
+		String stringMessage = builder.toString();
+		return stringMessage;
 	}
-	
+
 	default String replaceSerId(String xmlData, String getQName) {
-		return xmlData.replace("<SERVICEID>", "<SERVICEID>D" + getQName);
+		return replacePluralSerId(xmlData, "D" + getQName);
 	}
-	
+
 	default String replacePluralSerId(String xmlData, String xmlServiceId) {
 		if (xmlServiceId == null) {
 			xmlData = xmlData.replace("<SERVICEID></SERVICEID>", "");
 		} else {
-			xmlData = xmlData.replace("<SERVICEID></SERVICEID>",
-					"<SERVICEID>" + xmlServiceId + "</SERVICEID>");	
-		}return xmlData;
-	}
-	
-	default String replaceReply(String stringXmlData,String replyQ) {
-		
-		stringXmlData = stringXmlData.replace("</GLB_HEAD>",
-				"<REPLY><R_PVR>" + getQmgr() + "</R_PVR><R_DST>" + replyQ + "</R_DST></REPLY></GLB_HEAD>");
-		return stringXmlData;
-	}
-	
-	default String replaceRc(String xmlData) {
-		return xmlData.replace("</GLB_HEAD>", "<RC>99</RC></GLB_HEAD>");
-	}
-	
-	default String replacePluralRc(String xmlData, String rc) {
-		if (rc == null) {
-			xmlData = xmlData.replace("</GLB_HEAD>", "</GLB_HEAD>");
-		} else {
-			xmlData = xmlData.replace("</GLB_HEAD>", "<RC>" + rc + "</RC></GLB_HEAD>");
+			xmlData = xmlData.replace("<SERVICEID></SERVICEID>", "<SERVICEID>" + xmlServiceId + "</SERVICEID>");
 		}
 		return xmlData;
 	}
-	
-	default String replaceErrorReply(String stringXmlData, String ReplyError) {
-		return stringXmlData.replace("</GLB_HEAD>", ReplyError + "</GLB_HEAD>");
+
+	default String replaceReply(String stringXmlData, String replyQ, String getQmgr) {
+		return replaceErrorReply(stringXmlData, "<REPLY><R_PVR>" + getQmgr + "</R_PVR><R_DST>" + replyQ + "</R_DST></REPLY>");
+	}
+
+	default String replaceRc(String xmlData) {
+		return replacePluralRc(xmlData, "99");
+	}
+
+	default String replacePluralRc(String xmlData, String rc) {
+//		if (rc != null) {
+//			xmlData = replaceErrorReply(xmlData,"<RC>" + rc + "</RC>");
+//		}
+//		
+//		return xmlData;
+//
+		return rc != null ? replaceErrorReply(xmlData, "<RC>" + rc + "</RC>") : xmlData;
+	}
+
+	default String replaceErrorReply(String stringXmlData, String replyError) {
+		return stringXmlData.replace("</GLB_HEAD>", replyError + "</GLB_HEAD>");
 	}
 
 }
