@@ -29,7 +29,7 @@ import org.xmlunit.diff.Difference;
 import com.ibm.msg.client.wmq.compat.base.internal.MQC;
 import com.ibm.msg.client.wmq.compat.base.internal.MQMessage;
 
-public interface CommonTest extends Mq,Xml {
+public interface CommonTest extends Mq, Xml {
 
 	public static final String TS_Tab = "/CENTER/GLB_HEAD/TIMESTAMP/TS";
 	public static final String D2_Tab = "/CENTER/FRAME/APL_DATA/D2";
@@ -52,8 +52,7 @@ public interface CommonTest extends Mq,Xml {
 
 		assertEquals(getQmgr(), getMQMessageData.replyToQueueManagerName.trim());
 		assertEquals(QL_DH_REP.getQNames(), getMQMessageData.replyToQueueName.trim());
-		String xServiceId = xPath(getDocumentData, SERVICEID_Tab);
-		boolean serviceF = "F".equals(xServiceId.substring(1, 2));
+		boolean serviceF = "F".equals(xPath(getDocumentData, SERVICEID_Tab).substring(1, 2));
 		if (serviceF) {
 			assertEquals(putMQMessageData.characterSet, getMQMessageData.characterSet);
 		} else {
@@ -89,19 +88,13 @@ public interface CommonTest extends Mq,Xml {
 		for (int i = putCount + 1; i <= getCount; i++) {
 			assertEquals("RSHUBFX", xPath(getDocumentData, TS_Tab + "[" + i + "]/@SVR"));
 			assertEquals(xPath(putXmlData, "1"), xPath(getDocumentData, TS_Tab + "[" + i + "]/@KBN"));
-			int lvlInt = i - putCount;
-			String lvlString = String.valueOf(lvlInt);
-			assertEquals(lvlString, xPath(getDocumentData, TS_Tab + "[" + i + "]/@LVL"));
+			assertEquals(String.valueOf(i - putCount), xPath(getDocumentData, TS_Tab + "[" + i + "]/@LVL"));
 			assertEquals(xPath(putXmlData, SERVICEID_Tab), xPath(getDocumentData, TS_Tab + "[" + i + "]/@SVC"));
-
 			String getDatePath = xPath(getDocumentData, TS_Tab + "[" + i + "]");
-			String getDate = getDatePath.substring(0, 14);
-
-			String getDateCorrelation = getDatePath.substring(14, 17);
-			assertTrue(LocalDateTime.parse(getDate, DateTimeFormatter.ofPattern("yyyyMMddHHmmss"))
+			assertTrue(LocalDateTime.parse(getDatePath.substring(0, 14), DateTimeFormatter.ofPattern("yyyyMMddHHmmss"))
 					.isBefore(LocalDateTime.now()));
 
-			assertEquals("000", getDateCorrelation);
+			assertEquals("000", getDatePath.substring(14, 17));
 
 			List<String> nodeList = new ArrayList<>(Arrays.asList("RC", "TIMESTAMP"));
 			if (!serviceF) {
@@ -151,7 +144,7 @@ public interface CommonTest extends Mq,Xml {
 	default String xPath(Document getData, String xmlPath) throws XpathException {
 
 		XpathEngine xp = XMLUnit.newXpathEngine();
-		return xp.evaluate(xmlPath, getData);//TODO
+		return xp.evaluate(xmlPath, getData);// TODO
 	}
 
 	default void returnQTest(MQMessage putMQMessage, MQMessage getMQMessage, String rc, String appOrService)
@@ -168,20 +161,13 @@ public interface CommonTest extends Mq,Xml {
 		int getCount = xPathCount(getDocumentData, TS_Tab);
 		for (int i = putCount + 1; i <= getCount; i++) {
 			assertEquals(xPath(putXmlData, "2"), xPath(getDocumentData, TS_Tab + "[" + i + "]/@KBN"));
-			int lvlInt = i - putCount;
-			String lvlString = String.valueOf(lvlInt);
-			assertEquals(lvlString, xPath(getDocumentData, TS_Tab + "[" + i + "]/@LVL"));
+			assertEquals(String.valueOf(i - putCount), xPath(getDocumentData, TS_Tab + "[" + i + "]/@LVL"));
 			assertEquals("RSHUBF ", xPath(getDocumentData, TS_Tab + "[" + i + "]/@SVR"));
-
 			assertEquals(appOrService, xPath(getDocumentData, TS_Tab + "[" + i + "]/@SVC"));
-
 			String getDatePath = xPath(getDocumentData, TS_Tab + "[" + i + "]");
-			String getDate = getDatePath.substring(0, 14);
-			String getDateCorrelation = getDatePath.substring(14, 17);
-			assertTrue(LocalDateTime.parse(getDate, DateTimeFormatter.ofPattern("yyyyMMddHHmmss"))
+			assertTrue(LocalDateTime.parse(getDatePath.substring(0, 14), DateTimeFormatter.ofPattern("yyyyMMddHHmmss"))
 					.isBefore(LocalDateTime.now()));
-
-			assertEquals("000", getDateCorrelation);
+			assertEquals("000", getDatePath.substring(14, 17));
 
 		}
 
@@ -251,15 +237,13 @@ public interface CommonTest extends Mq,Xml {
 	default void returnMqTest(MQMessage putMQMessageData, MQMessage getMQMessageData)
 			throws IOException, ParserConfigurationException, SAXException, XpathException, TransformerException {
 
-		String putStringXmlData = mqMessageToString(putMQMessageData);
-		Document putDocumentXmlData = stringToDocument(putStringXmlData);
+		Document putDocumentXmlData = stringToDocument(mqMessageToString(putMQMessageData));
 		assertNotNull(getMQMessageData);
 
 		String getStringData = mqMessageToString(getMQMessageData);
 		Document getDocumentData = stringToDocument(getStringData);
 
-		String mqAppData = getMQMessageData.applicationIdData;
-		boolean appF = "F".equals(mqAppData.substring(1, 2));
+		boolean appF = "F".equals(getMQMessageData.applicationIdData.substring(1, 2));
 		if (appF) {
 			assertEquals(putMQMessageData.characterSet, getMQMessageData.characterSet);
 		} else {
@@ -278,7 +262,8 @@ public interface CommonTest extends Mq,Xml {
 		int getCount = xPathCount(getDocumentData, TS_Tab);
 
 		for (int i = 1; i <= putCount; i++) {
-			assertEquals(xPath(putDocumentXmlData, TS_Tab + "[" + i + "]"), xPath(getDocumentData, TS_Tab + "[" + i + "]"));
+			assertEquals(xPath(putDocumentXmlData, TS_Tab + "[" + i + "]"),
+					xPath(getDocumentData, TS_Tab + "[" + i + "]"));
 			assertEquals(xPath(putDocumentXmlData, TS_Tab + "[" + i + "]/@SVR"),
 					xPath(getDocumentData, TS_Tab + "[" + i + "]/@SVR"));
 			assertEquals(xPath(putDocumentXmlData, TS_Tab + "[" + i + "]/@KBN"),
@@ -293,19 +278,14 @@ public interface CommonTest extends Mq,Xml {
 		for (int i = putCount + 1; i <= getCount; i++) {
 			assertEquals(getQmgr(), xPath(getDocumentData, TS_Tab + "[" + i + "]/@SVR"));
 			assertEquals(xPath(putDocumentXmlData, "2"), xPath(getDocumentData, TS_Tab + "[" + i + "]/@KBN"));
-			int lvlInt = getCount - (i - 1);
-			String lvlString = String.valueOf(lvlInt);
-			assertEquals(lvlString, xPath(getDocumentData, TS_Tab + "[" + i + "]/@LVL"));
+			assertEquals(String.valueOf(getCount - (i - 1)), xPath(getDocumentData, TS_Tab + "[" + i + "]/@LVL"));
 			assertEquals(putMQMessageData.applicationIdData, xPath(getDocumentData, TS_Tab + "[" + i + "]/@SVC"));
 
 			String getDatePath = xPath(getDocumentData, TS_Tab + "[" + i + "]");
-			String getDate = getDatePath.substring(0, 14);
-
-			String getDateCorrelation = getDatePath.substring(14, 17);
-			assertTrue(LocalDateTime.parse(getDate, DateTimeFormatter.ofPattern("yyyyMMddHHmmss"))
+			assertTrue(LocalDateTime.parse(getDatePath.substring(0, 14), DateTimeFormatter.ofPattern("yyyyMMddHHmmss"))
 					.isBefore(LocalDateTime.now()));
 
-			assertEquals("000", getDateCorrelation);
+			assertEquals("000", getDatePath.substring(14, 17));
 
 		}
 
@@ -313,10 +293,8 @@ public interface CommonTest extends Mq,Xml {
 
 		assertEquals(xPath(putDocumentXmlData, R_DST_Tab), xPath(getDocumentData, R_DST_Tab));
 		assertEquals(xPath(putDocumentXmlData, R_PVR_Tab), xPath(getDocumentData, R_PVR_Tab));
-
-		String substringEncoding = getStringData.substring(getStringData.indexOf("encoding"),
-				getStringData.indexOf("\"UTF-8\"") + "\"UTF-8\"".length());
-		assertEquals(substringEncoding, "encoding=\"UTF-8\"");
+		assertEquals(getStringData.substring(getStringData.indexOf("encoding"),
+				getStringData.indexOf("\"UTF-8\"") + "\"UTF-8\"".length()), "encoding=\"UTF-8\"");
 
 		if (!appF) {
 			getStringData = getStringData.replace("UTF-8", "IBM-930");
@@ -324,5 +302,4 @@ public interface CommonTest extends Mq,Xml {
 			listPass(documentToString(putDocumentXmlData), getStringData, nodeList);
 		}
 	}
-
 }

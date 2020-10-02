@@ -79,10 +79,8 @@ public interface Mq {
 		if (!"DF".equals(appId)) {
 			stringXmlData = stringXmlData.replace("encoding=\"UTF-8\"", "encoding=\"IBM-930\"");
 			putMessage.characterSet = 943;
-
-			String d1D2 = stringXmlData.substring(stringXmlData.indexOf("<D1>"),
-					stringXmlData.indexOf("</D2>") + "</D2>".length());
-			stringXmlData = stringXmlData.replace(d1D2, "");
+			stringXmlData = stringXmlData.replace(stringXmlData.substring(stringXmlData.indexOf("<D1>"),
+					stringXmlData.indexOf("</D2>") + "</D2>".length()), "");
 		} else {
 			putMessage.characterSet = 1208;
 		}
@@ -107,8 +105,7 @@ public interface Mq {
 		MQQueue queue = null;
 		try {
 			qmgr = new MQQueueManager(getQmgr());
-			int openOption = MQC.MQOO_OUTPUT | MQC.MQOO_SET_IDENTITY_CONTEXT;
-			queue = qmgr.accessQueue(qName, openOption);
+			queue = qmgr.accessQueue(qName, MQC.MQOO_OUTPUT | MQC.MQOO_SET_IDENTITY_CONTEXT);
 			MQPutMessageOptions mqpmo = new MQPutMessageOptions();
 			mqpmo.options = MQC.MQPMO_NO_SYNCPOINT | MQC.MQPMO_SET_IDENTITY_CONTEXT;
 			queue.put(putData, mqpmo);
@@ -159,8 +156,7 @@ public interface Mq {
 		MQQueue queue = null;
 		try {
 			qmgr = new MQQueueManager(getQmgr());
-			int openOption = MQC.MQOO_INPUT_AS_Q_DEF;
-			queue = qmgr.accessQueue(qName, openOption);
+			queue = qmgr.accessQueue(qName, MQC.MQOO_INPUT_AS_Q_DEF);
 			queue.get(getMessageInCorrelId, matchCorrelIdOption);
 			return getMessageInCorrelId;
 		} catch (MQException e) {
