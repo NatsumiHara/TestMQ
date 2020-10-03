@@ -51,19 +51,11 @@ public interface Mq {
 		return putMessage;
 	}
 
-	public default MQMessage putReplyMessages(String stringXmlData, String getQName) throws IOException {
+	public default MQMessage putReplyMessages(String stringXmlData, int characterSet, String applicationIdData)
+			throws IOException {
 		MQMessage putMessage = new MQMessage();
-		if (!"F".equals(getQName)) {
-			stringXmlData = stringXmlData.replace("encoding=\"UTF-8\"", "encoding=\"IBM-930\"");
-			putMessage.characterSet = 943;
-
-			String d1D2 = stringXmlData.substring(stringXmlData.indexOf("<D1>"),
-					stringXmlData.indexOf("</D2>") + "</D2>".length());
-			stringXmlData = stringXmlData.replace(d1D2, "");
-		} else {
-			putMessage.characterSet = 1208;
-		}
-		putMessage.applicationIdData = "D" + getQName;
+		putMessage.characterSet = characterSet;
+		putMessage.applicationIdData = applicationIdData;
 		putMessage.priority = 5;
 		putMessage.format = MQC.MQFMT_STRING;
 		putMessage.writeString(stringXmlData);
@@ -71,28 +63,6 @@ public interface Mq {
 		putMessage.messageId = MQC.MQMI_NONE;
 		return putMessage;
 
-	}
-
-	public default MQMessage putReplyMessagesAppId(String stringXmlData, String appId) throws IOException {
-		MQMessage putMessage = new MQMessage();
-
-		if (!"DF".equals(appId)) {
-			stringXmlData = stringXmlData.replace("encoding=\"UTF-8\"", "encoding=\"IBM-930\"");
-			putMessage.characterSet = 943;
-			stringXmlData = stringXmlData.replace(stringXmlData.substring(stringXmlData.indexOf("<D1>"),
-					stringXmlData.indexOf("</D2>") + "</D2>".length()), "");
-		} else {
-			putMessage.characterSet = 1208;
-		}
-
-		putMessage.applicationIdData = appId;
-		putMessage.priority = 5;
-		putMessage.format = MQC.MQFMT_STRING;
-		putMessage.writeString(stringXmlData);
-		putMessage.persistence = 1;
-		putMessage.messageId = MQC.MQMI_NONE;
-
-		return putMessage;
 	}
 
 	public default void put(ConstantQname constantQName, MQMessage putData) throws Exception {
@@ -173,6 +143,16 @@ public interface Mq {
 			if (qmgr != null)
 				qmgr.disconnect();
 		}
+	}
+
+	default String mqMessageToString(MQMessage mqMessage) throws IOException {
+		StringBuilder builder = new StringBuilder();
+		mqMessage.setDataOffset(0);
+		while (mqMessage.getDataLength() > 0)
+			builder.append(mqMessage.readLine()).append(System.lineSeparator());
+
+		String stringMessage = builder.toString();
+		return stringMessage;
 	}
 
 	public default MQMessage get(ConstantQname constantQname, byte[] messageId) throws Exception {

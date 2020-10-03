@@ -1,7 +1,16 @@
 package jp.co.acom.fehub.mq;
 
-import static jp.co.acom.fehub.mq.ConstantQname.*;
+import static jp.co.acom.fehub.mq.ConstantQname.LOCALHOST;
+import static jp.co.acom.fehub.mq.ConstantQname.QL_DH_ERR;
+import static jp.co.acom.fehub.mq.ConstantQname.QL_DH_REP;
+import static jp.co.acom.fehub.mq.ConstantQname.QL_DW_REP;
+import static jp.co.acom.fehub.mq.ConstantQname.QMFH01;
+import static jp.co.acom.fehub.mq.ConstantQname.SYSTEM_ADMIN_EVENT;
+import static jp.co.acom.fehub.mq.ConstantQname.SYSTEM_BKR_CONFIG;
+import static jp.co.acom.fehub.mq.ConstantQname._50014;
+import static jp.co.acom.fehub.mq.ConstantQname.values;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
@@ -27,6 +36,56 @@ class FehubApplicationTest implements IDGenerator, CommonTest {
 			clean(k.getQNames());
 	}
 
+	ConstantQname inputQName(String q) {
+		return ConstantQname.valueOf("Q" + q + "_DH_REQ");
+	}
+
+	ConstantQname outputQName(String q) {
+		return ConstantQname.valueOf("QA_DH_D" + q);
+	}
+
+	MQMessage replaceF(String stringXmlData, String getQName) throws IOException {
+
+		int characterSet = 0;
+		if (!"F".equals(getQName)) {
+			stringXmlData = stringXmlData.replace("encoding=\"UTF-8\"", "encoding=\"IBM-930\"");
+			characterSet = 943;
+
+			String d1D2 = stringXmlData.substring(stringXmlData.indexOf("<D1>"),
+					stringXmlData.indexOf("</D2>") + "</D2>".length());
+			stringXmlData = stringXmlData.replace(d1D2, "");
+		} else {
+			characterSet = 1208;
+		}
+
+		String applicationIdData = null;
+		applicationIdData = "D" + getQName;
+
+		return putReplyMessages(stringXmlData, characterSet, applicationIdData);
+
+	}
+
+	MQMessage replaceDF(String stringXmlData, String getQName) throws IOException {
+
+		int characterSet = 0;
+		if (!"DF".equals(getQName)) {
+			stringXmlData = stringXmlData.replace("encoding=\"UTF-8\"", "encoding=\"IBM-930\"");
+			characterSet = 943;
+
+			String d1D2 = stringXmlData.substring(stringXmlData.indexOf("<D1>"),
+					stringXmlData.indexOf("</D2>") + "</D2>".length());
+			stringXmlData = stringXmlData.replace(d1D2, "");
+		} else {
+			characterSet = 1208;
+		}
+
+		String applicationIdData = null;
+		applicationIdData = getQName;
+
+		return putReplyMessages(stringXmlData, characterSet, applicationIdData);
+
+	}
+
 	@ParameterizedTest(name = "Run{index}:putQName={0},getQName={1},xmlString={2}")
 	@MethodSource("testMq")
 	@DisplayName("要求テスト")
@@ -35,8 +94,8 @@ class FehubApplicationTest implements IDGenerator, CommonTest {
 		String replaceServiceId = replaceSerId(fileToString(xmlString), getQName);
 		MQMessage putData = putMessages(replaceServiceId);
 		putData.replyToQueueName = QL_DW_REP.getQNames();
-		put("Q" + putQName + ".DH.REQ", putData);
-		extracted(putData, stringToDocument(replaceServiceId), get("QA.DH.D" + getQName, putData.messageId));
+		put(inputQName(putQName), putData);
+		extracted(putData, get(outputQName(getQName), putData.messageId));
 	}
 
 	static Stream<Arguments> testMq() {
@@ -50,21 +109,21 @@ class FehubApplicationTest implements IDGenerator, CommonTest {
 			for (Iterator<String> itr2 = D.iterator(); itr2.hasNext();) {
 				String DX = itr2.next();
 				list.add(Arguments.of(QX, DX, TEST_XML));
-				list.add(Arguments.of(QX, DX, TEST2_XML));
-				list.add(Arguments.of(QX, DX, TEST3_XML));
-				list.add(Arguments.of(QX, DX, TEST4_XML));
-				list.add(Arguments.of(QX, DX, TEST5_XML));
-				list.add(Arguments.of(QX, DX, TEST6_XML));
-				list.add(Arguments.of(QX, DX, TEST7_XML));
-				list.add(Arguments.of(QX, DX, TEST8_XML));
-				list.add(Arguments.of(QX, DX, TEST9_XML));
-				list.add(Arguments.of(QX, DX, TEST10_XML));
-				list.add(Arguments.of(QX, DX, TEST11_XML));
-				list.add(Arguments.of(QX, DX, TEST12_XML));
-				list.add(Arguments.of(QX, DX, TEST13_XML));
-				list.add(Arguments.of(QX, DX, TEST14_XML));
-				list.add(Arguments.of(QX, DX, TEST15_XML));
-				list.add(Arguments.of(QX, DX, TEST16_XML));
+//				list.add(Arguments.of(QX, DX, TEST2_XML));
+//				list.add(Arguments.of(QX, DX, TEST3_XML));
+//				list.add(Arguments.of(QX, DX, TEST4_XML));
+//				list.add(Arguments.of(QX, DX, TEST5_XML));
+//				list.add(Arguments.of(QX, DX, TEST6_XML));
+//				list.add(Arguments.of(QX, DX, TEST7_XML));
+//				list.add(Arguments.of(QX, DX, TEST8_XML));
+//				list.add(Arguments.of(QX, DX, TEST9_XML));
+//				list.add(Arguments.of(QX, DX, TEST10_XML));
+//				list.add(Arguments.of(QX, DX, TEST11_XML));
+//				list.add(Arguments.of(QX, DX, TEST12_XML));
+//				list.add(Arguments.of(QX, DX, TEST13_XML));
+//				list.add(Arguments.of(QX, DX, TEST14_XML));
+//				list.add(Arguments.of(QX, DX, TEST15_XML));
+//				list.add(Arguments.of(QX, DX, TEST16_XML));
 				list.add(Arguments.of(QX, DX, TEST17_XML));
 				list.add(Arguments.of(QX, DX, TEST18_XML));
 			}
@@ -88,7 +147,7 @@ class FehubApplicationTest implements IDGenerator, CommonTest {
 		}
 		MQMessage putData = putMessages(xmlData);
 		putData.replyToQueueName = QL_DW_REP.getQNames();
-		put("Q" + putQName + ".DH.REQ", putData);
+		put(inputQName(putQName), putData);
 		returnQTest(putData, get(QL_DW_REP.getQNames(), putData.messageId), rc,
 				xPath(stringToDocument(xmlData), SERVICEID_Tab));
 	}
@@ -134,7 +193,7 @@ class FehubApplicationTest implements IDGenerator, CommonTest {
 
 		MQMessage putData = putMessages(replaceSerId(fileToString(xmlPath), getQName));
 		putData.replyToQueueName = QL_DW_REP.getQNames();
-		put("Q" + putQName + ".DH.REQ", putData);
+		put(inputQName(putQName), putData);
 		errorQTest(putData, get_wait(QL_DH_ERR.getQNames()));
 
 	}
@@ -147,7 +206,7 @@ class FehubApplicationTest implements IDGenerator, CommonTest {
 		try {
 			MQMessage putData = putMessages(replaceSerId(fileToString(xmlPath), getQName));
 			putDisabled(QL_DH_ERR.getQNames());
-			put("Q" + putQName + ".DH.REQ", putData);
+			put(inputQName(putQName), putData);
 			deadQTest(putData, get_wait(SYSTEM_ADMIN_EVENT.getQNames()));
 		} finally {
 			putEnabled(QL_DH_ERR.getQNames());
@@ -187,7 +246,7 @@ class FehubApplicationTest implements IDGenerator, CommonTest {
 
 		String xmlData = replacePluralSerId(fileToString(xmlPath), xmlServiceId);
 		MQMessage putData = putMessages(xmlData);
-		put("Q" + putQName + ".DH.REQ", putData);
+		put(inputQName(putQName), putData);
 		errorQTest(putData, get_wait(QL_DH_ERR.getQNames()));
 
 	}
@@ -219,7 +278,7 @@ class FehubApplicationTest implements IDGenerator, CommonTest {
 	void responseTest(String getQName, String xmlString) throws Exception {
 
 		String replyQ = QL_DW_REP.getQNames();
-		MQMessage putData = putReplyMessages(replaceReply(fileToString(xmlString), replyQ, getQmgr()), getQName);
+		MQMessage putData = replaceF(replaceReply(fileToString(xmlString), replyQ, getQmgr()), getQName);
 		put(QL_DH_REP.getQNames(), putData);
 		returnMqTest(putData, get(replyQ, putData.messageId));
 
@@ -263,7 +322,7 @@ class FehubApplicationTest implements IDGenerator, CommonTest {
 		String replyQ = QL_DW_REP.getQNames();
 		String xmlData = replaceReply(fileToString(xmlPath), replyQ, getQmgr());
 		xmlData = replaceRc(xmlData);
-		MQMessage putData = putReplyMessagesAppId(xmlData, appId);
+		MQMessage putData = replaceDF(xmlData, appId);
 		put(QL_DH_REP.getQNames(), putData);
 		returnQTest(putData, get(replyQ, putData.messageId), "03", appId);
 
@@ -304,7 +363,7 @@ class FehubApplicationTest implements IDGenerator, CommonTest {
 		String replyQ = QL_DW_REP.getQNames();
 		String xmlData = replaceReply(fileToString(xmlPath), replyQ, getQmgr());
 		xmlData = replacePluralRc(xmlData, rc);
-		MQMessage putData = putReplyMessagesAppId(xmlData, appId);
+		MQMessage putData = replaceDF(xmlData, appId);
 		put(QL_DH_REP.getQNames(), putData);
 		returnQTest(putData, get(replyQ, putData.messageId), "01", appId);
 
@@ -347,7 +406,7 @@ class FehubApplicationTest implements IDGenerator, CommonTest {
 	@DisplayName("応答戻りfailureエラーテスト")
 	void responseFailureErrorTest(String getQName, String ReplyError, String xmlString) throws Exception {
 
-		MQMessage putData = putReplyMessages(replaceErrorReply(fileToString(xmlString), ReplyError), getQName);
+		MQMessage putData = replaceF(replaceErrorReply(fileToString(xmlString), ReplyError), getQName);
 		put(QL_DH_REP.getQNames(), putData);
 		errorQTest(putData, get_wait(QL_DH_ERR.getQNames()));
 
@@ -391,7 +450,7 @@ class FehubApplicationTest implements IDGenerator, CommonTest {
 
 		String xmlData = replaceErrorReply(fileToString(xmlPath), reply);
 		xmlData = replaceRc(xmlData);
-		MQMessage putData = putReplyMessagesAppId(xmlData, appId);
+		MQMessage putData = replaceDF(xmlData, appId);
 		put(QL_DH_REP.getQNames(), putData);
 		errorQTest(putData, get_wait(QL_DH_ERR.getQNames()));
 
@@ -434,7 +493,7 @@ class FehubApplicationTest implements IDGenerator, CommonTest {
 
 		String xmlData = replaceErrorReply(fileToString(xmlPath), reply);
 		xmlData = replacePluralRc(xmlData, rc);
-		MQMessage putData = putReplyMessagesAppId(xmlData, appId);
+		MQMessage putData = replaceF(xmlData, appId);
 		put(QL_DH_REP.getQNames(), putData);
 		errorQTest(putData, get_wait(QL_DH_ERR.getQNames()));
 
@@ -480,7 +539,7 @@ class FehubApplicationTest implements IDGenerator, CommonTest {
 	@DisplayName("応答戻りパースエラーテスト")
 	void responseParseErrorTest(String appId, String xmlPath) throws Exception {
 
-		MQMessage putData = putReplyMessages(fileToString(xmlPath), appId);
+		MQMessage putData = replaceF(fileToString(xmlPath), appId);
 		put(QL_DH_REP.getQNames(), putData);
 		errorQTest(putData, get_wait(QL_DH_ERR.getQNames()));
 
@@ -516,7 +575,7 @@ class FehubApplicationTest implements IDGenerator, CommonTest {
 		try {
 			String xmlStringData = fileToString(xmlPath);
 			xmlStringData = replaceErrorReply(xmlStringData, reply);
-			MQMessage putData = putReplyMessages(xmlStringData, appId);
+			MQMessage putData = replaceF(xmlStringData, appId);
 			putDisabled(QL_DH_ERR.getQNames());
 			put(QL_DH_REP.getQNames(), putData);
 			deadQTest(putData, get_wait(SYSTEM_ADMIN_EVENT.getQNames()));

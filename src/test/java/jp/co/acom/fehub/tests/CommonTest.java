@@ -1,6 +1,7 @@
 package jp.co.acom.fehub.tests;
 
 import static jp.co.acom.fehub.mq.ConstantQname.QL_DH_REP;
+import static org.junit.jupiter.api.Assertions.assertAll;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -11,20 +12,14 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Iterator;
 import java.util.List;
 
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.TransformerException;
 
-import org.custommonkey.xmlunit.XMLUnit;
-import org.custommonkey.xmlunit.XpathEngine;
 import org.custommonkey.xmlunit.exceptions.XpathException;
 import org.w3c.dom.Document;
 import org.xml.sax.SAXException;
-import org.xmlunit.builder.DiffBuilder;
-import org.xmlunit.diff.Diff;
-import org.xmlunit.diff.Difference;
 
 import com.ibm.msg.client.wmq.compat.base.internal.MQC;
 import com.ibm.msg.client.wmq.compat.base.internal.MQMessage;
@@ -41,31 +36,91 @@ public interface CommonTest extends Mq, Xml {
 	public static final String REPLY_Tab = "/CENTER/GLB_HEAD/REPLY";
 	public static final String REQUESTID_Tab = "/CENTER/GLB_HEAD/REQUESTID";
 
-	default void extracted(MQMessage putMQMessageData, Document putXmlData, MQMessage getMQMessageData)
-			throws XpathException, ParserConfigurationException, SAXException, IOException, ParseException,
-			TransformerException {
+	default void mqNoChangeTest(List<String> mqmd, MQMessage putMQMessage, MQMessage getMQMessage) {
+		assertAll(
+
+				() -> {
+					if (!mqmd.contains("priority"))
+						assertEquals(putMQMessage.priority, getMQMessage.priority);
+				},
+
+				() -> {
+					if (!mqmd.contains("persistence"))
+						assertEquals(putMQMessage.persistence, getMQMessage.persistence);
+				},
+
+				() -> {
+					if (!mqmd.contains("messageType"))
+						assertEquals(putMQMessage.messageType, getMQMessage.messageType);
+				},
+
+				() -> {
+					if (!mqmd.contains("format"))
+						assertEquals(putMQMessage.format.trim(), getMQMessage.format.trim());
+				},
+
+				() -> {
+					if (!mqmd.contains("expiry"))
+						assertEquals(putMQMessage.expiry, getMQMessage.expiry);
+				},
+
+				() -> {
+					if (!mqmd.contains("replyToQueueManagerName"))
+						assertEquals(getQmgr(), getMQMessage.replyToQueueManagerName.trim());
+				},
+
+				() -> {
+					if (!mqmd.contains("replyToQueueName"))
+						assertEquals(putMQMessage.replyToQueueName, getMQMessage.replyToQueueName.trim());
+				},
+
+				() -> {
+					if (!mqmd.contains("applicationIdData"))
+						assertEquals(putMQMessage.applicationIdData.trim(), getMQMessage.applicationIdData.trim());
+				},
+
+				() -> {
+					if (!mqmd.contains("characterSet"))
+						assertEquals(putMQMessage.characterSet, getMQMessage.characterSet);
+				},
+
+				() -> {
+					if (!mqmd.contains("encoding"))
+						assertEquals(putMQMessage.encoding, getMQMessage.encoding);
+				},
+
+				() -> {
+					if (!mqmd.contains("expiry"))
+						assertEquals(putMQMessage.expiry, getMQMessage.expiry);
+				}
+
+		);
+	}
+
+	default void extracted(MQMessage putMQMessageData, MQMessage getMQMessageData) throws XpathException,
+			ParserConfigurationException, SAXException, IOException, ParseException, TransformerException {
 
 		assertNotNull(getMQMessageData);
 
 		String getStringData = mqMessageToString(getMQMessageData);
 		Document getDocumentData = stringToDocument(getStringData);
+		String putStringData = mqMessageToString(putMQMessageData);
+		Document putXmlData = stringToDocument(putStringData);
 
-		assertEquals(getQmgr(), getMQMessageData.replyToQueueManagerName.trim());
-		assertEquals(QL_DH_REP.getQNames(), getMQMessageData.replyToQueueName.trim());
 		boolean serviceF = "F".equals(xPath(getDocumentData, SERVICEID_Tab).substring(1, 2));
 		if (serviceF) {
 			assertEquals(putMQMessageData.characterSet, getMQMessageData.characterSet);
 		} else {
 			assertEquals(943, getMQMessageData.characterSet);
 		}
-		assertEquals(putMQMessageData.priority, getMQMessageData.priority);
-		assertEquals(putMQMessageData.persistence, getMQMessageData.persistence);
-		assertEquals(putMQMessageData.messageType, getMQMessageData.messageType);
-		assertEquals(putMQMessageData.format.trim(), getMQMessageData.format.trim());
-		assertEquals(putMQMessageData.expiry, getMQMessageData.expiry);
 		assertEquals(xPath(getDocumentData, SERVICEID_Tab), getMQMessageData.applicationIdData.trim());
-		assertEquals("00", xPath(getDocumentData, RC_Tab));
+		assertEquals(QL_DH_REP.getQNames(), getMQMessageData.replyToQueueName.trim());
 
+		//no change
+		List<String> mqmd = new ArrayList<>(Arrays.asList("replyToQueueName", "applicationIdData", "characterSet"));
+		mqNoChangeTest(mqmd, putMQMessageData, getMQMessageData);
+
+		assertEquals("00", xPath(getDocumentData, RC_Tab));
 		if (!serviceF) {
 			assertEquals("¥¥", xPath(getDocumentData, D1_Tab));
 			assertEquals("‾‾", xPath(getDocumentData, D2_Tab));
@@ -73,18 +128,10 @@ public interface CommonTest extends Mq, Xml {
 		int putCount = xPathCount(putXmlData, TS_Tab);
 		int getCount = xPathCount(getDocumentData, TS_Tab);
 
-		for (int i = 1; i <= putCount; i++) {
-			assertEquals(xPath(putXmlData, TS_Tab + "[" + i + "]"), xPath(getDocumentData, TS_Tab + "[" + i + "]"));
-			assertEquals(xPath(putXmlData, TS_Tab + "[" + i + "]/@SVR"),
-					xPath(getDocumentData, TS_Tab + "[" + i + "]/@SVR"));
-			assertEquals(xPath(putXmlData, TS_Tab + "[" + i + "]/@KBN"),
-					xPath(getDocumentData, TS_Tab + "[" + i + "]/@KBN"));
-			assertEquals(xPath(putXmlData, TS_Tab + "[" + i + "]/@LVL"),
-					xPath(getDocumentData, TS_Tab + "[" + i + "]/@LVL"));
-			assertEquals(xPath(putXmlData, TS_Tab + "[" + i + "]/@SVC"),
-					xPath(getDocumentData, TS_Tab + "[" + i + "]/@SVC"));
-		}
+		// existiongTS
+		existingTimestamp(putXmlData, getDocumentData, putCount);
 
+		// additionTS
 		for (int i = putCount + 1; i <= getCount; i++) {
 			assertEquals("RSHUBFX", xPath(getDocumentData, TS_Tab + "[" + i + "]/@SVR"));
 			assertEquals(xPath(putXmlData, "1"), xPath(getDocumentData, TS_Tab + "[" + i + "]/@KBN"));
@@ -93,58 +140,33 @@ public interface CommonTest extends Mq, Xml {
 			String getDatePath = xPath(getDocumentData, TS_Tab + "[" + i + "]");
 			assertTrue(LocalDateTime.parse(getDatePath.substring(0, 14), DateTimeFormatter.ofPattern("yyyyMMddHHmmss"))
 					.isBefore(LocalDateTime.now()));
-
 			assertEquals("000", getDatePath.substring(14, 17));
 
-			List<String> nodeList = new ArrayList<>(Arrays.asList("RC", "TIMESTAMP"));
-			if (!serviceF) {
-				nodeList.add("D1");
-				nodeList.add("D2");
-			}
-			boolean requestIdNull = 0 == xPathCount(putXmlData, REQUESTID_Tab);
-			if (requestIdNull) {
-				nodeList.add("REQUESTID");
-				assertEquals(1, xPathCount(getDocumentData, REQUESTID_Tab));
-			}
+		}
 
-			boolean rep = xPathCount(putXmlData, REPLY_Tab) == 1;
-			if (!rep) {
-				nodeList.add("REPLY");
-				assertEquals(putMQMessageData.replyToQueueName, xPath(getDocumentData, R_DST_Tab));
-				assertEquals(putMQMessageData.replyToQueueManagerName, xPath(getDocumentData, R_PVR_Tab));
+		List<String> nodeList = new ArrayList<>(Arrays.asList("RC", "TIMESTAMP"));
+		if (!serviceF) {
+			nodeList.add("D1");
+			nodeList.add("D2");
+		}
+		boolean requestIdNull = 0 == xPathCount(putXmlData, REQUESTID_Tab);
+		if (requestIdNull) {
+			nodeList.add("REQUESTID");
+			assertEquals(1, xPathCount(getDocumentData, REQUESTID_Tab));
+		}
 
-			}
-			if (!serviceF)
-				getStringData = getStringData.replace("IBM-930", "UTF-8");
-
-			listPass(documentToString(putXmlData), getStringData, nodeList);
+		boolean rep = xPathCount(putXmlData, REPLY_Tab) == 1;
+		if (!rep) {
+			nodeList.add("REPLY");
+			assertEquals(putMQMessageData.replyToQueueName, xPath(getDocumentData, R_DST_Tab));
+			assertEquals(putMQMessageData.replyToQueueManagerName, xPath(getDocumentData, R_PVR_Tab));
 
 		}
-	}
+		if (!serviceF)
+			getStringData = getStringData.replace("IBM-930", "UTF-8");
 
-	default void listPass(String putData, String getReplaceData, List<String> nodeList) {
-
-		final Diff diff = DiffBuilder.compare(putData).withTest(getReplaceData)
-				.withNodeFilter(node -> !nodeList.contains(node.getNodeName())).build();
-
-		Iterator<Difference> iter = diff.getDifferences().iterator();
-		int size = 0;
-		while (iter.hasNext()) {
-			iter.next().toString();
-			size++;
-		}
-		assertEquals(0, size);
-
-	}
-
-	default int xPathCount(Document data, String xmlPath) throws XpathException {
-		return XMLUnit.newXpathEngine().getMatchingNodes(xmlPath, data).getLength();
-	}
-
-	default String xPath(Document getData, String xmlPath) throws XpathException {
-
-		XpathEngine xp = XMLUnit.newXpathEngine();
-		return xp.evaluate(xmlPath, getData);// TODO
+		List<String> differenceList = listPass(documentToString(putXmlData), getStringData, nodeList);
+		assertTrue(differenceList.isEmpty(), differenceList.toString());
 	}
 
 	default void returnQTest(MQMessage putMQMessage, MQMessage getMQMessage, String rc, String appOrService)
@@ -159,6 +181,7 @@ public interface CommonTest extends Mq, Xml {
 
 		int putCount = xPathCount(putXmlData, TS_Tab);
 		int getCount = xPathCount(getDocumentData, TS_Tab);
+
 		for (int i = putCount + 1; i <= getCount; i++) {
 			assertEquals(xPath(putXmlData, "2"), xPath(getDocumentData, TS_Tab + "[" + i + "]/@KBN"));
 			assertEquals(String.valueOf(i - putCount), xPath(getDocumentData, TS_Tab + "[" + i + "]/@LVL"));
@@ -176,34 +199,22 @@ public interface CommonTest extends Mq, Xml {
 		assertEquals(1208, getMQMessage.characterSet);
 
 		// no changing
-		assertEquals(putMQMessage.priority, getMQMessage.priority);
-		assertEquals(putMQMessage.persistence, getMQMessage.persistence);
-		assertEquals(putMQMessage.messageType, getMQMessage.messageType);
-		assertEquals(putMQMessage.format.trim(), getMQMessage.format.trim());
-		assertEquals(putMQMessage.expiry, getMQMessage.expiry);
-		assertEquals(getQmgr(), getMQMessage.replyToQueueManagerName.trim());
-		assertEquals(putMQMessage.replyToQueueName, getMQMessage.replyToQueueName.trim());
-		assertEquals(putMQMessage.applicationIdData.trim(), getMQMessage.applicationIdData.trim());
-
+		List<String> mqmd = new ArrayList<>(Arrays.asList("encoding", "characterSet"));
+		mqNoChangeTest(mqmd, putMQMessage, getMQMessage);
+		
 		List<String> nodeList = new ArrayList<>(Arrays.asList("RC", "TIMESTAMP"));
-
 		putStringData = putStringData.replace("encoding=\"IBM-930\"", "encoding=\"UTF-8\"");
 
-		listPass(putStringData, getStringData, nodeList);
+		List<String> differenceList = listPass(putStringData, getStringData, nodeList);
+		assertTrue(differenceList.isEmpty(), differenceList.toString());
 
 	}
 
 	default void errorQTest(MQMessage putMQMessage, MQMessage getMQMessage) throws IOException {
 
 		// no changing
-		assertEquals(putMQMessage.priority, getMQMessage.priority);
-		assertEquals(putMQMessage.messageType, getMQMessage.messageType);
-		assertEquals(putMQMessage.format.trim(), getMQMessage.format.trim());
-		assertEquals(getQmgr(), getMQMessage.replyToQueueManagerName.trim());
-		assertEquals(putMQMessage.replyToQueueName, getMQMessage.replyToQueueName.trim());
-		assertEquals(putMQMessage.applicationIdData.trim(), getMQMessage.applicationIdData.trim());
-		assertEquals(getMQMessage.encoding, putMQMessage.encoding);
-		assertEquals(getMQMessage.characterSet, putMQMessage.characterSet);
+		List<String> mqmd = new ArrayList<>(Arrays.asList("expiry", "persistence"));
+		mqNoChangeTest(mqmd, putMQMessage, getMQMessage);
 
 		// changing
 		assertEquals(MQC.MQEI_UNLIMITED, getMQMessage.expiry);
@@ -219,18 +230,14 @@ public interface CommonTest extends Mq, Xml {
 	default void deadQTest(MQMessage putMQMessage, MQMessage getMQMessage) throws IOException {
 
 		// no changing
-		assertEquals(putMQMessage.priority, getMQMessage.priority);
-		assertEquals(putMQMessage.messageType, getMQMessage.messageType);
-		assertEquals(MQC.MQFMT_DEAD_LETTER_HEADER, getMQMessage.format);
-		assertEquals(getQmgr(), getMQMessage.replyToQueueManagerName.trim());
-		assertEquals(putMQMessage.replyToQueueName, getMQMessage.replyToQueueName.trim());
-		assertEquals(putMQMessage.applicationIdData.trim(), getMQMessage.applicationIdData.trim());
-		assertEquals(546, getMQMessage.encoding);
-		assertEquals(1208, getMQMessage.characterSet);
+		List<String> mqmd = new ArrayList<>(Arrays.asList("format", "encoding", "characterSet"));
+		mqNoChangeTest(mqmd, putMQMessage, getMQMessage);
 
 		// changing
-		assertEquals(putMQMessage.expiry, getMQMessage.expiry);
-		assertEquals(putMQMessage.persistence, getMQMessage.persistence);
+		assertEquals(MQC.MQFMT_DEAD_LETTER_HEADER, getMQMessage.format);
+		assertEquals(546, getMQMessage.encoding);
+		assertEquals(1208, getMQMessage.characterSet);
+		
 
 	}
 
@@ -243,6 +250,7 @@ public interface CommonTest extends Mq, Xml {
 		String getStringData = mqMessageToString(getMQMessageData);
 		Document getDocumentData = stringToDocument(getStringData);
 
+		//change
 		boolean appF = "F".equals(getMQMessageData.applicationIdData.substring(1, 2));
 		if (appF) {
 			assertEquals(putMQMessageData.characterSet, getMQMessageData.characterSet);
@@ -250,31 +258,18 @@ public interface CommonTest extends Mq, Xml {
 			assertEquals(1208, getMQMessageData.characterSet);
 		}
 		assertEquals(273, putMQMessageData.encoding);
-		assertEquals(putMQMessageData.priority, getMQMessageData.priority);
-		assertEquals(putMQMessageData.persistence, getMQMessageData.persistence);
-		assertEquals(putMQMessageData.messageType, getMQMessageData.messageType);
-		assertEquals(putMQMessageData.format.trim(), getMQMessageData.format.trim());
-		assertEquals(putMQMessageData.expiry, getMQMessageData.expiry);
-		assertEquals(putMQMessageData.applicationIdData.trim(), getMQMessageData.applicationIdData.trim());
+		
+		//no change
+		List<String> mqmd = new ArrayList<>(Arrays.asList("encoding", "characterSet"));
+		mqNoChangeTest(mqmd, putMQMessageData, getMQMessageData);
+		
 		assertEquals("00", xPath(getDocumentData, RC_Tab));
-
 		int putCount = xPathCount(putDocumentXmlData, TS_Tab);
 		int getCount = xPathCount(getDocumentData, TS_Tab);
 
-		for (int i = 1; i <= putCount; i++) {
-			assertEquals(xPath(putDocumentXmlData, TS_Tab + "[" + i + "]"),
-					xPath(getDocumentData, TS_Tab + "[" + i + "]"));
-			assertEquals(xPath(putDocumentXmlData, TS_Tab + "[" + i + "]/@SVR"),
-					xPath(getDocumentData, TS_Tab + "[" + i + "]/@SVR"));
-			assertEquals(xPath(putDocumentXmlData, TS_Tab + "[" + i + "]/@KBN"),
-					xPath(getDocumentData, TS_Tab + "[" + i + "]/@KBN"));
-			assertEquals(xPath(putDocumentXmlData, TS_Tab + "[" + i + "]/@LVL"),
-					xPath(getDocumentData, TS_Tab + "[" + i + "]/@LVL"));
-			assertEquals(xPath(putDocumentXmlData, TS_Tab + "[" + i + "]/@SVC"),
-					xPath(getDocumentData, TS_Tab + "[" + i + "]/@SVC"));
-
-		}
-
+		// existiongTS
+		existingTimestamp(putDocumentXmlData, getDocumentData, putCount);
+		// additionTS
 		for (int i = putCount + 1; i <= getCount; i++) {
 			assertEquals(getQmgr(), xPath(getDocumentData, TS_Tab + "[" + i + "]/@SVR"));
 			assertEquals(xPath(putDocumentXmlData, "2"), xPath(getDocumentData, TS_Tab + "[" + i + "]/@KBN"));
@@ -299,7 +294,22 @@ public interface CommonTest extends Mq, Xml {
 		if (!appF) {
 			getStringData = getStringData.replace("UTF-8", "IBM-930");
 
-			listPass(documentToString(putDocumentXmlData), getStringData, nodeList);
+			List<String> differenceList = listPass(documentToString(putDocumentXmlData), getStringData, nodeList);
+			assertTrue(differenceList.isEmpty(), differenceList.toString());
+		}
+	}
+
+	default void existingTimestamp(Document putXmlData, Document getDocumentData, int putCount) throws XpathException {
+		for (int i = 1; i <= putCount; i++) {
+			assertEquals(xPath(putXmlData, TS_Tab + "[" + i + "]"), xPath(getDocumentData, TS_Tab + "[" + i + "]"));
+			assertEquals(xPath(putXmlData, TS_Tab + "[" + i + "]/@SVR"),
+					xPath(getDocumentData, TS_Tab + "[" + i + "]/@SVR"));
+			assertEquals(xPath(putXmlData, TS_Tab + "[" + i + "]/@KBN"),
+					xPath(getDocumentData, TS_Tab + "[" + i + "]/@KBN"));
+			assertEquals(xPath(putXmlData, TS_Tab + "[" + i + "]/@LVL"),
+					xPath(getDocumentData, TS_Tab + "[" + i + "]/@LVL"));
+			assertEquals(xPath(putXmlData, TS_Tab + "[" + i + "]/@SVC"),
+					xPath(getDocumentData, TS_Tab + "[" + i + "]/@SVC"));
 		}
 	}
 }
