@@ -95,7 +95,7 @@ class FehubApplicationTest implements IDGenerator, CommonTest {
 		MQMessage putData = putMessages(replaceServiceId);
 		putData.replyToQueueName = QL_DW_REP.getQNames();
 		put(inputQName(putQName), putData);
-		extracted(putData, get(outputQName(getQName), putData.messageId));
+		requestQTest(putData, get(outputQName(getQName), putData.messageId));
 	}
 
 	static Stream<Arguments> testMq() {
@@ -108,7 +108,7 @@ class FehubApplicationTest implements IDGenerator, CommonTest {
 			String QX = itr1.next();
 			for (Iterator<String> itr2 = D.iterator(); itr2.hasNext();) {
 				String DX = itr2.next();
-				list.add(Arguments.of(QX, DX, TEST_XML));
+				list.add(Arguments.of(QX, DX, NOMAL_XML));
 //				list.add(Arguments.of(QX, DX, TEST2_XML));
 //				list.add(Arguments.of(QX, DX, TEST3_XML));
 //				list.add(Arguments.of(QX, DX, TEST4_XML));
@@ -124,8 +124,8 @@ class FehubApplicationTest implements IDGenerator, CommonTest {
 //				list.add(Arguments.of(QX, DX, TEST14_XML));
 //				list.add(Arguments.of(QX, DX, TEST15_XML));
 //				list.add(Arguments.of(QX, DX, TEST16_XML));
-				list.add(Arguments.of(QX, DX, TEST17_XML));
-				list.add(Arguments.of(QX, DX, TEST18_XML));
+				list.add(Arguments.of(QX, DX, KUBUN_NOT_XML));
+				list.add(Arguments.of(QX, DX, REQUESTID_NOT_XML));
 			}
 		}
 
@@ -148,7 +148,7 @@ class FehubApplicationTest implements IDGenerator, CommonTest {
 		MQMessage putData = putMessages(xmlData);
 		putData.replyToQueueName = QL_DW_REP.getQNames();
 		put(inputQName(putQName), putData);
-		returnQTest(putData, get(QL_DW_REP.getQNames(), putData.messageId), rc,
+		responseReturnQTest(putData, get(QL_DW_REP.getQNames(), putData.messageId), rc,
 				xPath(stringToDocument(xmlData), SERVICEID_Tab));
 	}
 
@@ -163,24 +163,24 @@ class FehubApplicationTest implements IDGenerator, CommonTest {
 			for (Iterator<String> itr2 = D.iterator(); itr2.hasNext();) {
 				String DX = itr2.next();
 
-				list.add(Arguments.of(QX, DX, TEST_XML));
-				list.add(Arguments.of(QX, DX, TEST2_XML));
-				list.add(Arguments.of(QX, DX, TEST3_XML));
-				list.add(Arguments.of(QX, DX, TEST4_XML));
-				list.add(Arguments.of(QX, DX, TEST5_XML));
-				list.add(Arguments.of(QX, DX, TEST6_XML));
-				list.add(Arguments.of(QX, DX, TEST7_XML));
-				list.add(Arguments.of(QX, DX, TEST8_XML));
-				list.add(Arguments.of(QX, DX, TEST9_XML));
-				list.add(Arguments.of(QX, DX, TEST10_XML));
-				list.add(Arguments.of(QX, DX, TEST11_XML));
-				list.add(Arguments.of(QX, DX, TEST12_XML));
-				list.add(Arguments.of(QX, DX, TEST13_XML));
-				list.add(Arguments.of(QX, DX, TEST14_XML));
-				list.add(Arguments.of(QX, DX, TEST15_XML));
-				list.add(Arguments.of(QX, DX, TEST16_XML));
-				list.add(Arguments.of(QX, DX, TEST17_XML));
-				list.add(Arguments.of(QX, DX, TEST18_XML));
+				list.add(Arguments.of(QX, DX, NOMAL_XML));
+				list.add(Arguments.of(QX, DX, TS0_XML));
+				list.add(Arguments.of(QX, DX, TS2_XML));
+				list.add(Arguments.of(QX, DX, TS3_XML));
+				list.add(Arguments.of(QX, DX, TS4_XML));
+				list.add(Arguments.of(QX, DX, TS5_XML));
+				list.add(Arguments.of(QX, DX, TS6_XML));
+				list.add(Arguments.of(QX, DX, TS7_XML));
+				list.add(Arguments.of(QX, DX, TS8_XML));
+				list.add(Arguments.of(QX, DX, TIMESTAMP_NOT_XML));
+				list.add(Arguments.of(QX, DX, RC00_XML));
+				list.add(Arguments.of(QX, DX, RC01_XML));
+				list.add(Arguments.of(QX, DX, RC_Tab_XML));
+				list.add(Arguments.of(QX, DX, REPLY_XML));
+				list.add(Arguments.of(QX, DX, USERID_NOT_XML));
+				list.add(Arguments.of(QX, DX, VERSION_NOT_XML));
+				list.add(Arguments.of(QX, DX, KUBUN_NOT_XML));
+				list.add(Arguments.of(QX, DX, REQUESTID_NOT_XML));
 			}
 		}
 		return list.stream();
@@ -232,7 +232,7 @@ class FehubApplicationTest implements IDGenerator, CommonTest {
 //				list.add(Arguments.of(QX, DX, TEST24_XML));
 //				list.add(Arguments.of(QX, DX, TEST25_XML));
 //				list.add(Arguments.of(QX, DX, TEST26_XML));
-				list.add(Arguments.of(QX, DX, TEST27_XML));
+				list.add(Arguments.of(QX, DX, VERSION_BREAK_XML));
 
 			}
 		}
@@ -265,7 +265,7 @@ class FehubApplicationTest implements IDGenerator, CommonTest {
 //				list.add(Arguments.of(QX, DX, TEST28_XML));
 //				list.add(Arguments.of(QX, DX, TEST29_XML));
 //				list.add(Arguments.of(QX, DX, TEST30_XML));
-				list.add(Arguments.of(QX, DX, TEST_XML));
+				list.add(Arguments.of(QX, DX, NOMAL_XML));
 
 			}
 		}
@@ -280,7 +280,7 @@ class FehubApplicationTest implements IDGenerator, CommonTest {
 		String replyQ = QL_DW_REP.getQNames();
 		MQMessage putData = replaceF(replaceReply(fileToString(xmlString), replyQ, getQmgr()), getQName);
 		put(QL_DH_REP.getQNames(), putData);
-		returnMqTest(putData, get(replyQ, putData.messageId));
+		responseQTest(putData, get(replyQ, putData.messageId));
 
 	}
 
@@ -291,8 +291,8 @@ class FehubApplicationTest implements IDGenerator, CommonTest {
 		List<Arguments> list = new ArrayList<>();
 		for (Iterator<String> itr = D.iterator(); itr.hasNext();) {
 			String DX = itr.next();
-			list.add(Arguments.of(DX, TEST_XML));
-			list.add(Arguments.of(DX, TEST2_XML));
+			list.add(Arguments.of(DX, NOMAL_XML));
+			list.add(Arguments.of(DX, TS0_XML));
 //			list.add(Arguments.of(DX, TEST3_XML));
 //			list.add(Arguments.of(DX, TEST4_XML));
 //			list.add(Arguments.of(DX, TEST5_XML));
@@ -324,7 +324,7 @@ class FehubApplicationTest implements IDGenerator, CommonTest {
 		xmlData = replaceRc(xmlData);
 		MQMessage putData = replaceDF(xmlData, appId);
 		put(QL_DH_REP.getQNames(), putData);
-		returnQTest(putData, get(replyQ, putData.messageId), "03", appId);
+		responseReturnQTest(putData, get(replyQ, putData.messageId), "03", appId);
 
 	}
 
@@ -350,7 +350,7 @@ class FehubApplicationTest implements IDGenerator, CommonTest {
 //			list.add(Arguments.of(ID, TEST15_XML));
 //			list.add(Arguments.of(ID, TEST16_XML));
 //			list.add(Arguments.of(ID, TEST17_XML));
-			list.add(Arguments.of(ID, TEST18_XML));
+			list.add(Arguments.of(ID, REQUESTID_NOT_XML));
 		}
 		return list.stream();
 	}
@@ -365,7 +365,7 @@ class FehubApplicationTest implements IDGenerator, CommonTest {
 		xmlData = replacePluralRc(xmlData, rc);
 		MQMessage putData = replaceDF(xmlData, appId);
 		put(QL_DH_REP.getQNames(), putData);
-		returnQTest(putData, get(replyQ, putData.messageId), "01", appId);
+		responseReturnQTest(putData, get(replyQ, putData.messageId), "01", appId);
 
 	}
 
@@ -394,7 +394,7 @@ class FehubApplicationTest implements IDGenerator, CommonTest {
 //				list.add(Arguments.of(ID, RC, TEST15_XML));
 //				list.add(Arguments.of(ID, RC, TEST16_XML));
 //				list.add(Arguments.of(ID, RC, TEST17_XML));
-				list.add(Arguments.of(ID, RC, TEST18_XML));
+				list.add(Arguments.of(ID, RC, REQUESTID_NOT_XML));
 			}
 		}
 		return list.stream();
@@ -422,7 +422,7 @@ class FehubApplicationTest implements IDGenerator, CommonTest {
 			String DX = itr1.next();
 			for (Iterator<String> itr2 = ReplyError.iterator(); itr2.hasNext();) {
 				String Reply = itr2.next();
-				list.add(Arguments.of(DX, Reply, TEST_XML));
+				list.add(Arguments.of(DX, Reply, NOMAL_XML));
 //				list.add(Arguments.of(DX, Reply, TEST2_XML));
 //				list.add(Arguments.of(DX, Reply, TEST3_XML));
 //				list.add(Arguments.of(DX, Reply, TEST4_XML));
@@ -467,7 +467,7 @@ class FehubApplicationTest implements IDGenerator, CommonTest {
 			for (Iterator<String> itr2 = ReplyError.iterator(); itr2.hasNext();) {
 				String Reply = itr2.next();
 
-				list.add(Arguments.of(ID, Reply, TEST_XML));
+				list.add(Arguments.of(ID, Reply, NOMAL_XML));
 //				list.add(Arguments.of(ID, Reply, TEST2_XML));
 //				list.add(Arguments.of(ID, Reply, TEST3_XML));
 //				list.add(Arguments.of(ID, Reply, TEST4_XML));
@@ -526,7 +526,7 @@ class FehubApplicationTest implements IDGenerator, CommonTest {
 //					list.add(Arguments.of(ID, RC, Reply, TEST15_XML));
 //					list.add(Arguments.of(ID, RC, Reply, TEST16_XML));
 //					list.add(Arguments.of(ID, RC, Reply, TEST17_XML));
-					list.add(Arguments.of(ID, RC, Reply, TEST18_XML));
+					list.add(Arguments.of(ID, RC, Reply, REQUESTID_NOT_XML));
 				}
 			}
 		}
@@ -553,7 +553,7 @@ class FehubApplicationTest implements IDGenerator, CommonTest {
 		for (Iterator<String> itr2 = I.iterator(); itr2.hasNext();) {
 			String ID = itr2.next();
 
-			list.add(Arguments.of(ID, TEST19_XML));
+			list.add(Arguments.of(ID, KUBUN_BREAK_XML));
 //			list.add(Arguments.of(ID, TEST20_XML));
 //			list.add(Arguments.of(ID, TEST21_XML));
 //			list.add(Arguments.of(ID, TEST22_XML));
@@ -604,7 +604,7 @@ class FehubApplicationTest implements IDGenerator, CommonTest {
 //				list.add(Arguments.of(DX, Reply, TEST24_XML));
 //				list.add(Arguments.of(DX, Reply, TEST25_XML));
 //				list.add(Arguments.of(DX, Reply, TEST26_XML));
-				list.add(Arguments.of(DX, Reply, TEST27_XML));
+				list.add(Arguments.of(DX, Reply, VERSION_BREAK_XML));
 			}
 		}
 		return list.stream();

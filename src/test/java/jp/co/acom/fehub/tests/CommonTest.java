@@ -97,7 +97,7 @@ public interface CommonTest extends Mq, Xml {
 		);
 	}
 
-	default void extracted(MQMessage putMQMessageData, MQMessage getMQMessageData) throws XpathException,
+	default void requestQTest(MQMessage putMQMessageData, MQMessage getMQMessageData) throws XpathException,
 			ParserConfigurationException, SAXException, IOException, ParseException, TransformerException {
 
 		assertNotNull(getMQMessageData);
@@ -169,7 +169,7 @@ public interface CommonTest extends Mq, Xml {
 		assertTrue(differenceList.isEmpty(), differenceList.toString());
 	}
 
-	default void returnQTest(MQMessage putMQMessage, MQMessage getMQMessage, String rc, String appOrService)
+	default void responseReturnQTest(MQMessage putMQMessage, MQMessage getMQMessage, String rc, String appOrService)
 			throws IOException, ParserConfigurationException, SAXException, Exception {
 		String putStringData = mqMessageToString(putMQMessage);
 		Document putXmlData = stringToDocument(putStringData);
@@ -241,7 +241,7 @@ public interface CommonTest extends Mq, Xml {
 
 	}
 
-	default void returnMqTest(MQMessage putMQMessageData, MQMessage getMQMessageData)
+	default void responseQTest(MQMessage putMQMessageData, MQMessage getMQMessageData)
 			throws IOException, ParserConfigurationException, SAXException, XpathException, TransformerException {
 
 		Document putDocumentXmlData = stringToDocument(mqMessageToString(putMQMessageData));
