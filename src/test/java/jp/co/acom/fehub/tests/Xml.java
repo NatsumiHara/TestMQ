@@ -29,9 +29,10 @@ import org.xmlunit.diff.Diff;
 import org.xmlunit.diff.Difference;
 
 public interface Xml {
-	public static final String TS1_XML = "ts1.xml";
+	
 	public static final String NOMAL_XML = "NORMAL.xml";
 	public static final String TS0_XML = "TS0.xml";
+	public static final String TS1_XML = "ts1.xml";
 	public static final String TS2_XML = "TS2.xml";
 	public static final String TS3_XML = "TS3.xml";
 	public static final String TS4_XML = "TS4.xml";
