@@ -19,7 +19,7 @@ import com.ibm.msg.client.wmq.compat.base.internal.MQMessage;
 
 import jp.co.acom.fehub.tests.CommonTest;
 
-class FehubApplicationTest implements IDGenerator, CommonTest {
+class XmlCenterTest implements CommonTest {
 
 	@BeforeEach
 	void before() throws Exception {
@@ -38,28 +38,12 @@ class FehubApplicationTest implements IDGenerator, CommonTest {
 
 	MQMessage replaceF(String stringXmlData, String getQName) throws IOException {
 
-		int characterSet = 0;
-		if (!"F".equals(getQName)) {
-			stringXmlData = stringXmlData.replace("encoding=\"UTF-8\"", "encoding=\"IBM-930\"");
-			characterSet = 943;
-
-			String d1D2 = stringXmlData.substring(stringXmlData.indexOf("<D1>"),
-					stringXmlData.indexOf("</D2>") + "</D2>".length());
-			stringXmlData = stringXmlData.replace(d1D2, "");
-		} else {
-			characterSet = 1208;
-		}
-
-		String applicationIdData = null;
-		applicationIdData = "D" + getQName;
-
-		return putReplyMessages(stringXmlData, characterSet, applicationIdData);
-
+		return replaceDF(stringXmlData, "D" + getQName);
 	}
 
 	MQMessage replaceDF(String stringXmlData, String getQName) throws IOException {
 
-		int characterSet = 0;
+		int characterSet = 1208;
 		if (!"DF".equals(getQName)) {
 			stringXmlData = stringXmlData.replace("encoding=\"UTF-8\"", "encoding=\"IBM-930\"");
 			characterSet = 943;
@@ -67,8 +51,6 @@ class FehubApplicationTest implements IDGenerator, CommonTest {
 			String d1D2 = stringXmlData.substring(stringXmlData.indexOf("<D1>"),
 					stringXmlData.indexOf("</D2>") + "</D2>".length());
 			stringXmlData = stringXmlData.replace(d1D2, "");
-		} else {
-			characterSet = 1208;
 		}
 
 		String applicationIdData = null;
@@ -196,8 +178,8 @@ class FehubApplicationTest implements IDGenerator, CommonTest {
 	void requestDeadQError(String putQName, String getQName, String xmlPath) throws Exception {
 
 		try {
-			MQMessage putData = putMessages(replaceSerId(fileToString(xmlPath), getQName));
 			putDisabled(QL_DH_ERR.getQNames());
+			MQMessage putData = putMessages(replaceSerId(fileToString(xmlPath), getQName));
 			put(inputQName(putQName), putData);
 			deadQTest(putData, get_wait(SYSTEM_ADMIN_EVENT.getQNames()));
 		} finally {
@@ -565,10 +547,10 @@ class FehubApplicationTest implements IDGenerator, CommonTest {
 	void responseDeadErrorTest(String appId, String reply, String xmlPath) throws Exception {
 
 		try {
+			putDisabled(QL_DH_ERR.getQNames());
 			String xmlStringData = fileToString(xmlPath);
 			xmlStringData = replaceErrorReply(xmlStringData, reply);
 			MQMessage putData = replaceF(xmlStringData, appId);
-			putDisabled(QL_DH_ERR.getQNames());
 			put(QL_DH_REP.getQNames(), putData);
 			deadQTest(putData, get_wait(SYSTEM_ADMIN_EVENT.getQNames()));
 		} finally {
