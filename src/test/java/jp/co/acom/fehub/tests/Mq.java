@@ -46,7 +46,7 @@ public interface Mq {
 		putMessage.replyToQueueManagerName = getQmgr();
 		putMessage.format = MQC.MQFMT_STRING;
 		putMessage.writeString(data);
-		putMessage.persistence = 1;
+		putMessage.persistence = MQC.MQPER_NOT_PERSISTENT;
 		putMessage.messageId = MQC.MQMI_NONE;
 		return putMessage;
 	}
@@ -59,7 +59,7 @@ public interface Mq {
 		putMessage.priority = 5;
 		putMessage.format = MQC.MQFMT_STRING;
 		putMessage.writeString(stringXmlData);
-		putMessage.persistence = 1;
+		putMessage.persistence = MQC.MQPER_NOT_PERSISTENT;
 		putMessage.messageId = MQC.MQMI_NONE;
 		return putMessage;
 
@@ -151,8 +151,7 @@ public interface Mq {
 		while (mqMessage.getDataLength() > 0)
 			builder.append(mqMessage.readLine()).append(System.lineSeparator());
 
-		String stringMessage = builder.toString();
-		return stringMessage;
+		return builder.toString();
 	}
 
 	public default MQMessage get(ConstantQname constantQname, byte[] messageId) throws Exception {

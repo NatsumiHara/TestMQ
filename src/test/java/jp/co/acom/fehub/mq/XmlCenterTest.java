@@ -60,6 +60,14 @@ class XmlCenterTest implements CommonTest {
 
 	}
 
+	private static final List<String> Q = Arrays.asList("C", "L");
+	private static final List<String> D = Arrays.asList("L", "F");
+	private static final List<String> A = Arrays.asList("", null, "A", "DA");
+	private static final List<String> I = Arrays.asList("DF", "DL", "A", "");
+	private static final List<String> R = Arrays.asList("00", "", null);
+	private static final List<String> X = Arrays.asList("A", "");
+	private static final List<String> ReplyError = Arrays.asList("", "<REPLY></REPLY>");
+
 	@ParameterizedTest(name = "Run{index}:putQName={0},getQName={1},xmlString={2}")
 	@MethodSource("testMq")
 	@DisplayName("要求テスト")
@@ -73,9 +81,6 @@ class XmlCenterTest implements CommonTest {
 	}
 
 	static Stream<Arguments> testMq() {
-
-		List<String> Q = Arrays.asList("C", "L");
-		List<String> D = Arrays.asList("L", "F");
 
 		List<Arguments> list = new ArrayList<>();
 		for (Iterator<String> itr1 = Q.iterator(); itr1.hasNext();) {
@@ -128,13 +133,10 @@ class XmlCenterTest implements CommonTest {
 
 	static Stream<Arguments> returnTest() {
 
-		List<String> Q = Arrays.asList("C", "L");
-		List<String> D = Arrays.asList("", null, "A", "DA");
-
 		List<Arguments> list = new ArrayList<>();
 		for (Iterator<String> itr1 = Q.iterator(); itr1.hasNext();) {
 			String QX = itr1.next();
-			for (Iterator<String> itr2 = D.iterator(); itr2.hasNext();) {
+			for (Iterator<String> itr2 = A.iterator(); itr2.hasNext();) {
 				String DX = itr2.next();
 
 				list.add(Arguments.of(QX, DX, NOMAL_XML));
@@ -189,9 +191,6 @@ class XmlCenterTest implements CommonTest {
 
 	static Stream<Arguments> parseErrorTest() {
 
-		List<String> Q = Arrays.asList("C", "L");
-		List<String> D = Arrays.asList("L", "F");
-
 		List<Arguments> list = new ArrayList<>();
 		for (Iterator<String> itr1 = Q.iterator(); itr1.hasNext();) {
 			String QX = itr1.next();
@@ -227,9 +226,6 @@ class XmlCenterTest implements CommonTest {
 
 	static Stream<Arguments> failureError() {
 
-		List<String> Q = Arrays.asList("C", "L");
-		List<String> D = Arrays.asList("", null, "A", "DA");
-
 		List<Arguments> list = new ArrayList<>();
 		for (Iterator<String> itr1 = Q.iterator(); itr1.hasNext();) {
 			String QX = itr1.next();
@@ -259,8 +255,6 @@ class XmlCenterTest implements CommonTest {
 	}
 
 	static Stream<Arguments> returnTestMq() {
-
-		List<String> D = Arrays.asList("F", "L");
 
 		List<Arguments> list = new ArrayList<>();
 		for (Iterator<String> itr = D.iterator(); itr.hasNext();) {
@@ -304,8 +298,6 @@ class XmlCenterTest implements CommonTest {
 
 	static Stream<Arguments> responseAppIdTest() {
 
-		List<String> I = Arrays.asList("DF", "DL", "A", "");
-
 		List<Arguments> list = new ArrayList<>();
 		for (Iterator<String> itr = I.iterator(); itr.hasNext();) {
 			String ID = itr.next();
@@ -345,11 +337,8 @@ class XmlCenterTest implements CommonTest {
 
 	static Stream<Arguments> responseRcTest() {
 
-		List<String> I = Arrays.asList("A", "");
-		List<String> R = Arrays.asList("00", "", null);
-
 		List<Arguments> list = new ArrayList<>();
-		for (Iterator<String> itr1 = I.iterator(); itr1.hasNext();) {
+		for (Iterator<String> itr1 = X.iterator(); itr1.hasNext();) {
 			String ID = itr1.next();
 			for (Iterator<String> itr2 = R.iterator(); itr2.hasNext();) {
 				String RC = itr2.next();
@@ -387,9 +376,6 @@ class XmlCenterTest implements CommonTest {
 	}
 
 	static Stream<Arguments> responseFailureErrorTest() {
-
-		List<String> D = Arrays.asList("F", "L");
-		List<String> ReplyError = Arrays.asList("", "<REPLY></REPLY>");
 
 		List<Arguments> list = new ArrayList<>();
 		for (Iterator<String> itr1 = D.iterator(); itr1.hasNext();) {
@@ -432,9 +418,6 @@ class XmlCenterTest implements CommonTest {
 
 	static Stream<Arguments> responseFailureRcErrorTest() {
 
-		List<String> I = Arrays.asList("DF", "DL", "A", "");
-		List<String> ReplyError = Arrays.asList("", "<REPLY></REPLY>");
-
 		List<Arguments> list = new ArrayList<>();
 		for (Iterator<String> itr1 = I.iterator(); itr1.hasNext();) {
 			String ID = itr1.next();
@@ -475,12 +458,8 @@ class XmlCenterTest implements CommonTest {
 
 	static Stream<Arguments> responseAppTest() {
 
-		List<String> I = Arrays.asList("A", "");
-		List<String> R = Arrays.asList("00", "", null);
-		List<String> ReplyError = Arrays.asList("", "<REPLY></REPLY>");
-
 		List<Arguments> list = new ArrayList<>();
-		for (Iterator<String> itr1 = I.iterator(); itr1.hasNext();) {
+		for (Iterator<String> itr1 = X.iterator(); itr1.hasNext();) {
 			String ID = itr1.next();
 			for (Iterator<String> itr2 = R.iterator(); itr2.hasNext();) {
 				String RC = itr2.next();
@@ -521,10 +500,8 @@ class XmlCenterTest implements CommonTest {
 
 	static Stream<Arguments> responseParseErrorTest() {
 
-		List<String> I = Arrays.asList("F", "L");
-
 		List<Arguments> list = new ArrayList<>();
-		for (Iterator<String> itr2 = I.iterator(); itr2.hasNext();) {
+		for (Iterator<String> itr2 = D.iterator(); itr2.hasNext();) {
 			String ID = itr2.next();
 
 			list.add(Arguments.of(ID, KUBUN_BREAK_XML));
@@ -561,9 +538,6 @@ class XmlCenterTest implements CommonTest {
 
 	static Stream<Arguments> responseDeadErrorTest() {
 
-		List<String> D = Arrays.asList("F", "L");
-		List<String> ReplyError = Arrays.asList("", "<REPLY></REPLY>");
-
 		List<Arguments> list = new ArrayList<>();
 		for (Iterator<String> itr1 = D.iterator(); itr1.hasNext();) {
 			String DX = itr1.next();
@@ -587,25 +561,21 @@ class XmlCenterTest implements CommonTest {
 
 	@Override
 	public String getQmgr() {
-		// TODO Auto-generated method stub
 		return QMFH01;
 	}
 
 	@Override
 	public String getLocalhost() {
-		// TODO Auto-generated method stub
 		return LOCALHOST;
 	}
 
 	@Override
 	public String getCannal() {
-		// TODO Auto-generated method stub
 		return SYSTEM_BKR_CONFIG;
 	}
 
 	@Override
 	public int getPort() {
-		// TODO Auto-generated method stub
 		return _50014;
 	}
 

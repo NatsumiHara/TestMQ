@@ -7,19 +7,14 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.IOException;
-import java.text.ParseException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import javax.xml.parsers.ParserConfigurationException;
-import javax.xml.transform.TransformerException;
-
 import org.custommonkey.xmlunit.exceptions.XpathException;
 import org.w3c.dom.Document;
-import org.xml.sax.SAXException;
 
 import com.ibm.msg.client.wmq.compat.base.internal.MQC;
 import com.ibm.msg.client.wmq.compat.base.internal.MQMessage;
@@ -97,23 +92,22 @@ public interface CommonTest extends Mq, Xml {
 		);
 	}
 
-	default void requestQTest(MQMessage putMQMessageData, MQMessage getMQMessageData) throws XpathException,
-			ParserConfigurationException, SAXException, IOException, ParseException, TransformerException {
-
-		assertNotNull(getMQMessageData);
+	default void requestQTest(MQMessage putMQMessageData, MQMessage getMQMessageData) throws Exception {
+		
+		assertNotNull(getMQMessageData,"GETの結果メッセージが空でした");
 
 		String getStringData = mqMessageToString(getMQMessageData);
 		Document getDocumentData = stringToDocument(getStringData);
 		String putStringData = mqMessageToString(putMQMessageData);
-		Document putXmlData = stringToDocument(putStringData);
+		Document putDocumentData = stringToDocument(putStringData);
 
-		boolean serviceF = "F".equals(xPath(getDocumentData, SERVICEID_Tab).substring(1, 2));
+		boolean serviceF = "F".equals(xPath(putDocumentData, SERVICEID_Tab).substring(1, 2));
 		if (serviceF) {
 			assertEquals(putMQMessageData.characterSet, getMQMessageData.characterSet);
 		} else {
 			assertEquals(943, getMQMessageData.characterSet);
 		}
-		assertEquals(xPath(getDocumentData, SERVICEID_Tab), getMQMessageData.applicationIdData.trim());
+		assertEquals(xPath(putDocumentData, SERVICEID_Tab), getMQMessageData.applicationIdData.trim());//TODO
 		assertEquals(QL_DH_REP.getQNames(), getMQMessageData.replyToQueueName.trim());
 
 		//no change
@@ -125,18 +119,18 @@ public interface CommonTest extends Mq, Xml {
 			assertEquals("¥¥", xPath(getDocumentData, D1_Tab));
 			assertEquals("‾‾", xPath(getDocumentData, D2_Tab));
 		}
-		int putCount = xPathCount(putXmlData, TS_Tab);
+		int putCount = xPathCount(putDocumentData, TS_Tab);
 		int getCount = xPathCount(getDocumentData, TS_Tab);
 
 		// existiongTS
-		existingTimestamp(putXmlData, getDocumentData, putCount);
+		existingTimestamp(putDocumentData, getDocumentData, putCount);
 
 		// additionTS
 		for (int i = putCount + 1; i <= getCount; i++) {
 			assertEquals("RSHUBFX", xPath(getDocumentData, TS_Tab + "[" + i + "]/@SVR"));
-			assertEquals(xPath(putXmlData, "1"), xPath(getDocumentData, TS_Tab + "[" + i + "]/@KBN"));
+			assertEquals("1", xPath(getDocumentData, TS_Tab + "[" + i + "]/@KBN"));
 			assertEquals(String.valueOf(i - putCount), xPath(getDocumentData, TS_Tab + "[" + i + "]/@LVL"));
-			assertEquals(xPath(putXmlData, SERVICEID_Tab), xPath(getDocumentData, TS_Tab + "[" + i + "]/@SVC"));
+			assertEquals(xPath(putDocumentData, SERVICEID_Tab), xPath(getDocumentData, TS_Tab + "[" + i + "]/@SVC"));
 			String getDatePath = xPath(getDocumentData, TS_Tab + "[" + i + "]");
 			assertTrue(LocalDateTime.parse(getDatePath.substring(0, 14), DateTimeFormatter.ofPattern("yyyyMMddHHmmss"))
 					.isBefore(LocalDateTime.now()));
@@ -149,13 +143,13 @@ public interface CommonTest extends Mq, Xml {
 			nodeList.add("D1");
 			nodeList.add("D2");
 		}
-		boolean requestIdNull = 0 == xPathCount(putXmlData, REQUESTID_Tab);
+		boolean requestIdNull = 0 == xPathCount(putDocumentData, REQUESTID_Tab);
 		if (requestIdNull) {
 			nodeList.add("REQUESTID");
 			assertEquals(1, xPathCount(getDocumentData, REQUESTID_Tab));
 		}
 
-		boolean rep = xPathCount(putXmlData, REPLY_Tab) == 1;
+		boolean rep = xPathCount(putDocumentData, REPLY_Tab) == 1;
 		if (!rep) {
 			nodeList.add("REPLY");
 			assertEquals(putMQMessageData.replyToQueueName, xPath(getDocumentData, R_DST_Tab));
@@ -165,12 +159,13 @@ public interface CommonTest extends Mq, Xml {
 		if (!serviceF)
 			getStringData = getStringData.replace("IBM-930", "UTF-8");
 
-		List<String> differenceList = listPass(documentToString(putXmlData), getStringData, nodeList);
+		List<String> differenceList = listPass(documentToString(putDocumentData), getStringData, nodeList);
 		assertTrue(differenceList.isEmpty(), differenceList.toString());
+			
 	}
 
 	default void responseReturnQTest(MQMessage putMQMessage, MQMessage getMQMessage, String rc, String appOrService)
-			throws IOException, ParserConfigurationException, SAXException, Exception {
+			throws Exception {
 		String putStringData = mqMessageToString(putMQMessage);
 		Document putXmlData = stringToDocument(putStringData);
 
@@ -183,7 +178,7 @@ public interface CommonTest extends Mq, Xml {
 		int getCount = xPathCount(getDocumentData, TS_Tab);
 
 		for (int i = putCount + 1; i <= getCount; i++) {
-			assertEquals(xPath(putXmlData, "2"), xPath(getDocumentData, TS_Tab + "[" + i + "]/@KBN"));
+			assertEquals("2", xPath(getDocumentData, TS_Tab + "[" + i + "]/@KBN"));
 			assertEquals(String.valueOf(i - putCount), xPath(getDocumentData, TS_Tab + "[" + i + "]/@LVL"));
 			assertEquals("RSHUBF ", xPath(getDocumentData, TS_Tab + "[" + i + "]/@SVR"));
 			assertEquals(appOrService, xPath(getDocumentData, TS_Tab + "[" + i + "]/@SVC"));
@@ -222,8 +217,7 @@ public interface CommonTest extends Mq, Xml {
 
 		String getStringData = mqMessageToString(getMQMessage);
 		String putStringData = mqMessageToString(putMQMessage);
-		assertEquals(putStringData.replace(System.lineSeparator(), ""),
-				getStringData.replace(System.lineSeparator(), ""));
+		assertEquals(putStringData,getStringData);
 
 	}
 
@@ -242,16 +236,16 @@ public interface CommonTest extends Mq, Xml {
 	}
 
 	default void responseQTest(MQMessage putMQMessageData, MQMessage getMQMessageData)
-			throws IOException, ParserConfigurationException, SAXException, XpathException, TransformerException {
+			throws Exception {
 
 		Document putDocumentXmlData = stringToDocument(mqMessageToString(putMQMessageData));
-		assertNotNull(getMQMessageData);
+		assertNotNull(getMQMessageData, "GETの結果メッセージが空でした");
 
 		String getStringData = mqMessageToString(getMQMessageData);
 		Document getDocumentData = stringToDocument(getStringData);
 
 		//change
-		boolean appF = "F".equals(getMQMessageData.applicationIdData.substring(1, 2));
+		boolean appF = "F".equals(putMQMessageData.applicationIdData.substring(1, 2));
 		if (appF) {
 			assertEquals(putMQMessageData.characterSet, getMQMessageData.characterSet);
 		} else {
@@ -272,7 +266,7 @@ public interface CommonTest extends Mq, Xml {
 		// additionTS
 		for (int i = putCount + 1; i <= getCount; i++) {
 			assertEquals(getQmgr(), xPath(getDocumentData, TS_Tab + "[" + i + "]/@SVR"));
-			assertEquals(xPath(putDocumentXmlData, "2"), xPath(getDocumentData, TS_Tab + "[" + i + "]/@KBN"));
+			assertEquals("2", xPath(getDocumentData, TS_Tab + "[" + i + "]/@KBN"));
 			assertEquals(String.valueOf(getCount - (i - 1)), xPath(getDocumentData, TS_Tab + "[" + i + "]/@LVL"));
 			assertEquals(putMQMessageData.applicationIdData, xPath(getDocumentData, TS_Tab + "[" + i + "]/@SVC"));
 
@@ -286,8 +280,6 @@ public interface CommonTest extends Mq, Xml {
 
 		List<String> nodeList = new ArrayList<>(Arrays.asList("RC", "TIMESTAMP"));
 
-		assertEquals(xPath(putDocumentXmlData, R_DST_Tab), xPath(getDocumentData, R_DST_Tab));
-		assertEquals(xPath(putDocumentXmlData, R_PVR_Tab), xPath(getDocumentData, R_PVR_Tab));
 		assertEquals(getStringData.substring(getStringData.indexOf("encoding"),
 				getStringData.indexOf("\"UTF-8\"") + "\"UTF-8\"".length()), "encoding=\"UTF-8\"");
 

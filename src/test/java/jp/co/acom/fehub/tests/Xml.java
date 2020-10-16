@@ -11,7 +11,6 @@ import java.util.List;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.Transformer;
 import javax.xml.transform.TransformerException;
 import javax.xml.transform.TransformerFactory;
@@ -23,56 +22,55 @@ import org.custommonkey.xmlunit.XpathEngine;
 import org.custommonkey.xmlunit.exceptions.XpathException;
 import org.w3c.dom.Document;
 import org.xml.sax.InputSource;
-import org.xml.sax.SAXException;
 import org.xmlunit.builder.DiffBuilder;
 import org.xmlunit.diff.Diff;
 import org.xmlunit.diff.Difference;
 
 public interface Xml {
-	
-	public static final String NOMAL_XML = "NORMAL.xml";
-	public static final String TS0_XML = "TS0.xml";
-	public static final String TS1_XML = "ts1.xml";
-	public static final String TS2_XML = "TS2.xml";
-	public static final String TS3_XML = "TS3.xml";
-	public static final String TS4_XML = "TS4.xml";
-	public static final String TS5_XML = "TS5.xml";
-	public static final String TS6_XML = "TS6.xml";
-	public static final String TS7_XML = "TS7.xml";
-	public static final String TS8_XML = "TS8.xml";
-	public static final String TIMESTAMP_NOT_XML = "TIMESTAMP_NOT.xml";
-	public static final String RC00_XML = "RC00.xml";
-	public static final String RC01_XML = "RC01.xml";
-	public static final String RC_Tab_XML = "RC_Tab.xml";
-	public static final String REPLY_XML = "REPLY.xml";
-	public static final String USERID_NOT_XML = "userId_not.xml";
-	public static final String VERSION_NOT_XML = "version_not.xml";
-	public static final String KUBUN_NOT_XML = "kubun_not.xml";
-	public static final String REQUESTID_NOT_XML = "requestId_not.xml";
-	public static final String KUBUN_BREAK_XML = "KUBUN_break.xml";
-	public static final String RC_BREAK_XML = "RC_break.xml";
-	public static final String REPLY_BREAK_XML = "REPLY_break.xml";
-	public static final String REQUESTID_BREAK_XML = "REQUESTID_break.xml";
-	public static final String SERVICEID_BREAK_XML = "SERVICEID_break.xml";
-	public static final String TIMESTAMP_BREAK_XML = "TIMESTAMP_break.xml";
-	public static final String TS_BREAK_XML = "TS_break.xml";
-	public static final String USERID_BREAK_XML = "USERID_break.xml";
-	public static final String VERSION_BREAK_XML = "VERSION_break.xml";
-	public static final String REPLY_QMGR_XML = "REPLY_qmgr.xml";
-	public static final String REPLY_QNAME_XML = "REPLY_qName.xml";
-	public static final String REPLY_QMGR_QNAME_XML = "REPLY_qmgr+qName.xml";
-	
+
+	String NOMAL_XML = "NORMAL.xml";
+	String TS0_XML = "TS0.xml";
+	String TS1_XML = "ts1.xml";
+	String TS2_XML = "TS2.xml";
+	String TS3_XML = "TS3.xml";
+	String TS4_XML = "TS4.xml";
+	String TS5_XML = "TS5.xml";
+	String TS6_XML = "TS6.xml";
+	String TS7_XML = "TS7.xml";
+	String TS8_XML = "TS8.xml";
+	String TIMESTAMP_NOT_XML = "TIMESTAMP_NOT.xml";
+	String RC00_XML = "RC00.xml";
+	String RC01_XML = "RC01.xml";
+	String RC_Tab_XML = "RC_Tab.xml";
+	String REPLY_XML = "REPLY.xml";
+	String USERID_NOT_XML = "userId_not.xml";
+	String VERSION_NOT_XML = "version_not.xml";
+	String KUBUN_NOT_XML = "kubun_not.xml";
+	String REQUESTID_NOT_XML = "requestId_not.xml";
+	String KUBUN_BREAK_XML = "KUBUN_break.xml";
+	String RC_BREAK_XML = "RC_break.xml";
+	String REPLY_BREAK_XML = "REPLY_break.xml";
+	String REQUESTID_BREAK_XML = "REQUESTID_break.xml";
+	String SERVICEID_BREAK_XML = "SERVICEID_break.xml";
+	String TIMESTAMP_BREAK_XML = "TIMESTAMP_break.xml";
+	String TS_BREAK_XML = "TS_break.xml";
+	String USERID_BREAK_XML = "USERID_break.xml";
+	String VERSION_BREAK_XML = "VERSION_break.xml";
+	String REPLY_QMGR_XML = "REPLY_qmgr.xml";
+	String REPLY_QNAME_XML = "REPLY_qName.xml";
+	String REPLY_QMGR_QNAME_XML = "REPLY_qmgr+qName.xml";
+
 	default String xPath(Document getData, String xmlPath) throws XpathException {
 
 		XpathEngine xp = XMLUnit.newXpathEngine();
 		return xp.evaluate(xmlPath, getData);
 	}
-	
+
 	default int xPathCount(Document data, String xmlPath) throws XpathException {
 		return XMLUnit.newXpathEngine().getMatchingNodes(xmlPath, data).getLength();
 	}
 
-	default Document fileToDocument(String file) throws ParserConfigurationException, SAXException, IOException {
+	default Document fileToDocument(String file) throws Exception {
 
 		DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
 		DocumentBuilder builder = factory.newDocumentBuilder();
@@ -89,8 +87,7 @@ public interface Xml {
 		return stringWriter.toString();
 	}
 
-	default Document stringToDocument(String stringWriter)
-			throws ParserConfigurationException, SAXException, IOException {
+	default Document stringToDocument(String stringWriter) throws Exception {
 		InputSource inputSource = new InputSource(new StringReader(stringWriter));
 		DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
 		DocumentBuilder builder = factory.newDocumentBuilder();
@@ -154,7 +151,7 @@ public interface Xml {
 				.withNodeFilter(node -> !nodeList.contains(node.getNodeName())).build();
 
 		Iterator<Difference> iter = diff.getDifferences().iterator();
-		
+
 		List<String> list = new ArrayList<>();
 		while (iter.hasNext()) {
 			list.add(iter.next().toString());
