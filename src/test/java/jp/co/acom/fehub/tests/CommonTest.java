@@ -107,7 +107,7 @@ public interface CommonTest extends Mq, Xml {
 		} else {
 			assertEquals(943, getMQMessageData.characterSet);
 		}
-		assertEquals(xPath(putDocumentData, SERVICEID_Tab), getMQMessageData.applicationIdData.trim());//TODO
+		assertEquals(xPath(putDocumentData, SERVICEID_Tab), getMQMessageData.applicationIdData.trim());
 		assertEquals(QL_DH_REP.getQNames(), getMQMessageData.replyToQueueName.trim());
 
 		//no change
@@ -206,6 +206,8 @@ public interface CommonTest extends Mq, Xml {
 	}
 
 	default void errorQTest(MQMessage putMQMessage, MQMessage getMQMessage) throws IOException {
+		
+		assertNotNull(getMQMessage,"GETの結果メッセージが空でした");
 
 		// no changing
 		List<String> mqmd = new ArrayList<>(Arrays.asList("expiry", "persistence"));
@@ -264,6 +266,7 @@ public interface CommonTest extends Mq, Xml {
 		// existiongTS
 		existingTimestamp(putDocumentXmlData, getDocumentData, putCount);
 		// additionTS
+
 		for (int i = putCount + 1; i <= getCount; i++) {
 			assertEquals(getQmgr(), xPath(getDocumentData, TS_Tab + "[" + i + "]/@SVR"));
 			assertEquals("2", xPath(getDocumentData, TS_Tab + "[" + i + "]/@KBN"));

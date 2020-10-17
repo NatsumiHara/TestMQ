@@ -1,11 +1,18 @@
 package jp.co.acom.fehub.mq;
 
-import static jp.co.acom.fehub.mq.ConstantQname.*;
+import static jp.co.acom.fehub.mq.ConstantQname.LOCALHOST;
+import static jp.co.acom.fehub.mq.ConstantQname.QL_DH_ERR;
+import static jp.co.acom.fehub.mq.ConstantQname.QL_DH_REP;
+import static jp.co.acom.fehub.mq.ConstantQname.QL_DW_REP;
+import static jp.co.acom.fehub.mq.ConstantQname.QMFH01;
+import static jp.co.acom.fehub.mq.ConstantQname.SYSTEM_ADMIN_EVENT;
+import static jp.co.acom.fehub.mq.ConstantQname.SYSTEM_BKR_CONFIG;
+import static jp.co.acom.fehub.mq.ConstantQname._50014;
+import static jp.co.acom.fehub.mq.ConstantQname.values;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Iterator;
 import java.util.List;
 import java.util.stream.Stream;
 
@@ -66,7 +73,10 @@ class XmlCenterTest implements CommonTest {
 	private static final List<String> I = Arrays.asList("DF", "DL", "A", "");
 	private static final List<String> R = Arrays.asList("00", "", null);
 	private static final List<String> X = Arrays.asList("A", "");
-	private static final List<String> ReplyError = Arrays.asList("", "<REPLY></REPLY>");
+	private static final List<String> ReplyError = Arrays.asList("", "<REPLY></REPLY>",
+			"<REPLY><R_PVR>QMDW01</R_PVR><R_DST>" + QL_DW_REP.getQNames() + "</R_DST></REPLY>",
+			"<REPLY><R_PVR>" + QMFH01 + "</R_PVR><R_DST>QA.DW.REP</R_DST></REPLY>",
+			"<REPLY><R_PVR>QMDW01</R_PVR><R_DST>QA.DW.REP</R_DST></REPLY>");
 
 	@ParameterizedTest(name = "Run{index}:putQName={0},getQName={1},xmlString={2}")
 	@MethodSource("testMq")
@@ -83,10 +93,8 @@ class XmlCenterTest implements CommonTest {
 	static Stream<Arguments> testMq() {
 
 		List<Arguments> list = new ArrayList<>();
-		for (Iterator<String> itr1 = Q.iterator(); itr1.hasNext();) {
-			String QX = itr1.next();
-			for (Iterator<String> itr2 = D.iterator(); itr2.hasNext();) {
-				String DX = itr2.next();
+		Q.forEach(QX -> {
+			D.forEach(DX -> {
 				list.add(Arguments.of(QX, DX, NOMAL_XML));
 				list.add(Arguments.of(QX, DX, TS0_XML));
 				list.add(Arguments.of(QX, DX, TS2_XML));
@@ -100,13 +108,12 @@ class XmlCenterTest implements CommonTest {
 				list.add(Arguments.of(QX, DX, RC00_XML));
 				list.add(Arguments.of(QX, DX, RC01_XML));
 				list.add(Arguments.of(QX, DX, RC_Tab_XML));
-				list.add(Arguments.of(QX, DX, REPLY_XML));
 				list.add(Arguments.of(QX, DX, USERID_NOT_XML));
 				list.add(Arguments.of(QX, DX, VERSION_NOT_XML));
 				list.add(Arguments.of(QX, DX, KUBUN_NOT_XML));
 				list.add(Arguments.of(QX, DX, REQUESTID_NOT_XML));
-			}
-		}
+			});
+		});
 
 		return list.stream();
 
@@ -114,7 +121,7 @@ class XmlCenterTest implements CommonTest {
 
 	@ParameterizedTest(name = "Run{index}:putQName={0},xmlServiceId={1},xmlPath={2}")
 	@MethodSource("returnTest")
-	@DisplayName("要求戻りテスト")
+	@DisplayName("要求戻りreplyToQテスト")
 	void requestReturnTest(String putQName, String xmlServiceId, String xmlPath) throws Exception {
 
 		String xmlData = replacePluralSerId(fileToString(xmlPath), xmlServiceId);
@@ -131,14 +138,29 @@ class XmlCenterTest implements CommonTest {
 				xPath(stringToDocument(xmlData), SERVICEID_Tab));
 	}
 
+	@ParameterizedTest(name = "Run{index}:putQName={0},xmlServiceId={1},xmlPath={2}")
+	@MethodSource("returnTest")
+	@DisplayName("要求戻りREPLYテスト")
+	void requestReturnReplyTest(String putQName, String xmlServiceId, String xmlPath) throws Exception {
+		String returnQName = QL_DW_REP.getQNames();
+		String xmlData = replacePluralSerId(fileToString(xmlPath), xmlServiceId);
+		xmlData = replaceReply(xmlData, returnQName, getQmgr());
+		String rc;
+		if ("DA".equals(xmlServiceId)) {
+			rc = "02";
+		} else {
+			rc = "01";
+		}
+		MQMessage putData = putMessages(xmlData);
+		put(inputQName(putQName), putData);
+		responseReturnQTest(putData, get(returnQName, putData.messageId), rc,
+				xPath(stringToDocument(xmlData), SERVICEID_Tab));
+	}
+
 	static Stream<Arguments> returnTest() {
-
 		List<Arguments> list = new ArrayList<>();
-		for (Iterator<String> itr1 = Q.iterator(); itr1.hasNext();) {
-			String QX = itr1.next();
-			for (Iterator<String> itr2 = A.iterator(); itr2.hasNext();) {
-				String DX = itr2.next();
-
+		Q.forEach(QX -> {
+			A.forEach(DX -> {
 				list.add(Arguments.of(QX, DX, NOMAL_XML));
 				list.add(Arguments.of(QX, DX, TS0_XML));
 				list.add(Arguments.of(QX, DX, TS2_XML));
@@ -152,14 +174,14 @@ class XmlCenterTest implements CommonTest {
 				list.add(Arguments.of(QX, DX, RC00_XML));
 				list.add(Arguments.of(QX, DX, RC01_XML));
 				list.add(Arguments.of(QX, DX, RC_Tab_XML));
-				list.add(Arguments.of(QX, DX, REPLY_XML));
 				list.add(Arguments.of(QX, DX, USERID_NOT_XML));
 				list.add(Arguments.of(QX, DX, VERSION_NOT_XML));
 				list.add(Arguments.of(QX, DX, KUBUN_NOT_XML));
 				list.add(Arguments.of(QX, DX, REQUESTID_NOT_XML));
-			}
-		}
+			});
+		});
 		return list.stream();
+
 	}
 
 	@ParameterizedTest(name = "Run{index}:putQName={0},getQName={1},xmlPath={2}")
@@ -192,11 +214,8 @@ class XmlCenterTest implements CommonTest {
 	static Stream<Arguments> parseErrorTest() {
 
 		List<Arguments> list = new ArrayList<>();
-		for (Iterator<String> itr1 = Q.iterator(); itr1.hasNext();) {
-			String QX = itr1.next();
-			for (Iterator<String> itr2 = D.iterator(); itr2.hasNext();) {
-				String DX = itr2.next();
-
+		Q.forEach(QX -> {
+			D.forEach(DX -> {
 				list.add(Arguments.of(QX, DX, KUBUN_BREAK_XML));
 				list.add(Arguments.of(QX, DX, RC_BREAK_XML));
 				list.add(Arguments.of(QX, DX, REPLY_BREAK_XML));
@@ -206,18 +225,19 @@ class XmlCenterTest implements CommonTest {
 				list.add(Arguments.of(QX, DX, TS_BREAK_XML));
 				list.add(Arguments.of(QX, DX, USERID_BREAK_XML));
 				list.add(Arguments.of(QX, DX, VERSION_BREAK_XML));
+			});
+		});
 
-			}
-		}
 		return list.stream();
 	}
 
-	@ParameterizedTest(name = "Run{index}:putQName={0},xmlServiceId={1},xmlPath={2}")
+	@ParameterizedTest(name = "Run{index}:putQName={0},xmlServiceId={1},reply={2},xmlPath={3}")
 	@MethodSource("failureError")
 	@DisplayName("要求Failureエラーテスト")
-	void requestFailureError(String putQName, String xmlServiceId, String xmlPath) throws Exception {
+	void requestFailureError(String putQName, String xmlServiceId, String reply, String xmlPath) throws Exception {
 
 		String xmlData = replacePluralSerId(fileToString(xmlPath), xmlServiceId);
+		xmlData = replaceErrorReply(fileToString(xmlPath), reply);
 		MQMessage putData = putMessages(xmlData);
 		put(inputQName(putQName), putData);
 		errorQTest(putData, get_wait(QL_DH_ERR.getQNames()));
@@ -227,18 +247,14 @@ class XmlCenterTest implements CommonTest {
 	static Stream<Arguments> failureError() {
 
 		List<Arguments> list = new ArrayList<>();
-		for (Iterator<String> itr1 = Q.iterator(); itr1.hasNext();) {
-			String QX = itr1.next();
-			for (Iterator<String> itr2 = D.iterator(); itr2.hasNext();) {
-				String DX = itr2.next();
+		Q.forEach(QX -> {
+			A.forEach(DX -> {
+				ReplyError.forEach(Reply -> {
+					list.add(Arguments.of(QX, DX, Reply, NOMAL_XML));
+				});
+			});
+		});
 
-				list.add(Arguments.of(QX, DX, REPLY_QMGR_XML));
-				list.add(Arguments.of(QX, DX, REPLY_QNAME_XML));
-				list.add(Arguments.of(QX, DX, REPLY_QMGR_QNAME_XML));
-				list.add(Arguments.of(QX, DX, NOMAL_XML));
-
-			}
-		}
 		return list.stream();
 	}
 
@@ -250,15 +266,15 @@ class XmlCenterTest implements CommonTest {
 		String replyQ = QL_DW_REP.getQNames();
 		MQMessage putData = replaceF(replaceReply(fileToString(xmlString), replyQ, getQmgr()), getQName);
 		put(QL_DH_REP.getQNames(), putData);
-		responseQTest(putData, get(replyQ, putData.messageId));
-
+		MQMessage getData = get(replyQ, putData.messageId);
+		responseQTest(putData, getData);
 	}
 
 	static Stream<Arguments> returnTestMq() {
 
 		List<Arguments> list = new ArrayList<>();
-		for (Iterator<String> itr = D.iterator(); itr.hasNext();) {
-			String DX = itr.next();
+		D.forEach(DX -> {
+
 			list.add(Arguments.of(DX, NOMAL_XML));
 			list.add(Arguments.of(DX, TS0_XML));
 			list.add(Arguments.of(DX, TS2_XML));
@@ -271,12 +287,11 @@ class XmlCenterTest implements CommonTest {
 			list.add(Arguments.of(DX, TIMESTAMP_NOT_XML));
 			list.add(Arguments.of(DX, RC00_XML));
 			list.add(Arguments.of(DX, RC_Tab_XML));
-			list.add(Arguments.of(DX, REPLY_XML));
 			list.add(Arguments.of(DX, USERID_NOT_XML));
 			list.add(Arguments.of(DX, VERSION_NOT_XML));
 			list.add(Arguments.of(DX, KUBUN_NOT_XML));
 			list.add(Arguments.of(DX, REQUESTID_NOT_XML));
-		}
+		});
 
 		return list.stream();
 
@@ -299,9 +314,7 @@ class XmlCenterTest implements CommonTest {
 	static Stream<Arguments> responseAppIdTest() {
 
 		List<Arguments> list = new ArrayList<>();
-		for (Iterator<String> itr = I.iterator(); itr.hasNext();) {
-			String ID = itr.next();
-
+		I.forEach(ID -> {
 			list.add(Arguments.of(ID, NOMAL_XML));
 			list.add(Arguments.of(ID, TS0_XML));
 			list.add(Arguments.of(ID, TS2_XML));
@@ -312,12 +325,12 @@ class XmlCenterTest implements CommonTest {
 			list.add(Arguments.of(ID, TS7_XML));
 			list.add(Arguments.of(ID, TS8_XML));
 			list.add(Arguments.of(ID, TIMESTAMP_NOT_XML));
-			list.add(Arguments.of(ID, REPLY_XML));
 			list.add(Arguments.of(ID, USERID_NOT_XML));
 			list.add(Arguments.of(ID, VERSION_NOT_XML));
 			list.add(Arguments.of(ID, KUBUN_NOT_XML));
 			list.add(Arguments.of(ID, REQUESTID_NOT_XML));
-		}
+		});
+
 		return list.stream();
 	}
 
@@ -338,11 +351,8 @@ class XmlCenterTest implements CommonTest {
 	static Stream<Arguments> responseRcTest() {
 
 		List<Arguments> list = new ArrayList<>();
-		for (Iterator<String> itr1 = X.iterator(); itr1.hasNext();) {
-			String ID = itr1.next();
-			for (Iterator<String> itr2 = R.iterator(); itr2.hasNext();) {
-				String RC = itr2.next();
-
+		X.forEach(ID -> {
+			R.forEach(RC -> {
 				list.add(Arguments.of(ID, RC, NOMAL_XML));
 				list.add(Arguments.of(ID, RC, TS0_XML));
 				list.add(Arguments.of(ID, RC, TS2_XML));
@@ -353,13 +363,13 @@ class XmlCenterTest implements CommonTest {
 				list.add(Arguments.of(ID, RC, TS7_XML));
 				list.add(Arguments.of(ID, RC, TS8_XML));
 				list.add(Arguments.of(ID, RC, TIMESTAMP_NOT_XML));
-				list.add(Arguments.of(ID, RC, REPLY_XML));
 				list.add(Arguments.of(ID, RC, USERID_NOT_XML));
 				list.add(Arguments.of(ID, RC, VERSION_NOT_XML));
 				list.add(Arguments.of(ID, RC, KUBUN_NOT_XML));
 				list.add(Arguments.of(ID, RC, REQUESTID_NOT_XML));
-			}
-		}
+			});
+		});
+
 		return list.stream();
 
 	}
@@ -378,10 +388,8 @@ class XmlCenterTest implements CommonTest {
 	static Stream<Arguments> responseFailureErrorTest() {
 
 		List<Arguments> list = new ArrayList<>();
-		for (Iterator<String> itr1 = D.iterator(); itr1.hasNext();) {
-			String DX = itr1.next();
-			for (Iterator<String> itr2 = ReplyError.iterator(); itr2.hasNext();) {
-				String Reply = itr2.next();
+		D.forEach(DX -> {
+			ReplyError.forEach(Reply -> {
 				list.add(Arguments.of(DX, Reply, NOMAL_XML));
 				list.add(Arguments.of(DX, Reply, TS0_XML));
 				list.add(Arguments.of(DX, Reply, TS2_XML));
@@ -398,8 +406,9 @@ class XmlCenterTest implements CommonTest {
 				list.add(Arguments.of(DX, Reply, VERSION_NOT_XML));
 				list.add(Arguments.of(DX, Reply, KUBUN_NOT_XML));
 				list.add(Arguments.of(DX, Reply, REQUESTID_NOT_XML));
-			}
-		}
+
+			});
+		});
 		return list.stream();
 	}
 
@@ -419,11 +428,8 @@ class XmlCenterTest implements CommonTest {
 	static Stream<Arguments> responseFailureRcErrorTest() {
 
 		List<Arguments> list = new ArrayList<>();
-		for (Iterator<String> itr1 = I.iterator(); itr1.hasNext();) {
-			String ID = itr1.next();
-			for (Iterator<String> itr2 = ReplyError.iterator(); itr2.hasNext();) {
-				String Reply = itr2.next();
-
+		I.forEach(ID -> {
+			ReplyError.forEach(Reply -> {
 				list.add(Arguments.of(ID, Reply, NOMAL_XML));
 				list.add(Arguments.of(ID, Reply, TS0_XML));
 				list.add(Arguments.of(ID, Reply, TS2_XML));
@@ -438,8 +444,8 @@ class XmlCenterTest implements CommonTest {
 				list.add(Arguments.of(ID, Reply, VERSION_NOT_XML));
 				list.add(Arguments.of(ID, Reply, KUBUN_NOT_XML));
 				list.add(Arguments.of(ID, Reply, REQUESTID_NOT_XML));
-			}
-		}
+			});
+		});
 		return list.stream();
 	}
 
@@ -459,13 +465,9 @@ class XmlCenterTest implements CommonTest {
 	static Stream<Arguments> responseAppTest() {
 
 		List<Arguments> list = new ArrayList<>();
-		for (Iterator<String> itr1 = X.iterator(); itr1.hasNext();) {
-			String ID = itr1.next();
-			for (Iterator<String> itr2 = R.iterator(); itr2.hasNext();) {
-				String RC = itr2.next();
-				for (Iterator<String> itr3 = ReplyError.iterator(); itr3.hasNext();) {
-					String Reply = itr3.next();
-
+		X.forEach(ID -> {
+			R.forEach(RC -> {
+				ReplyError.forEach(Reply -> {
 					list.add(Arguments.of(ID, RC, Reply, NOMAL_XML));
 					list.add(Arguments.of(ID, RC, Reply, TS0_XML));
 					list.add(Arguments.of(ID, RC, Reply, TS2_XML));
@@ -480,9 +482,10 @@ class XmlCenterTest implements CommonTest {
 					list.add(Arguments.of(ID, RC, Reply, VERSION_NOT_XML));
 					list.add(Arguments.of(ID, RC, Reply, KUBUN_NOT_XML));
 					list.add(Arguments.of(ID, RC, Reply, REQUESTID_NOT_XML));
-				}
-			}
-		}
+				});
+			});
+		});
+
 		return list.stream();
 
 	}
@@ -501,9 +504,7 @@ class XmlCenterTest implements CommonTest {
 	static Stream<Arguments> responseParseErrorTest() {
 
 		List<Arguments> list = new ArrayList<>();
-		for (Iterator<String> itr2 = D.iterator(); itr2.hasNext();) {
-			String ID = itr2.next();
-
+		D.forEach(ID -> {
 			list.add(Arguments.of(ID, KUBUN_BREAK_XML));
 			list.add(Arguments.of(ID, RC_BREAK_XML));
 			list.add(Arguments.of(ID, REPLY_BREAK_XML));
@@ -513,7 +514,8 @@ class XmlCenterTest implements CommonTest {
 			list.add(Arguments.of(ID, TS_BREAK_XML));
 			list.add(Arguments.of(ID, USERID_BREAK_XML));
 			list.add(Arguments.of(ID, VERSION_BREAK_XML));
-		}
+		});
+
 		return list.stream();
 
 	}
@@ -539,11 +541,8 @@ class XmlCenterTest implements CommonTest {
 	static Stream<Arguments> responseDeadErrorTest() {
 
 		List<Arguments> list = new ArrayList<>();
-		for (Iterator<String> itr1 = D.iterator(); itr1.hasNext();) {
-			String DX = itr1.next();
-			for (Iterator<String> itr2 = ReplyError.iterator(); itr2.hasNext();) {
-				String Reply = itr2.next();
-
+		D.forEach(DX -> {
+			ReplyError.forEach(Reply -> {
 				list.add(Arguments.of(DX, Reply, KUBUN_BREAK_XML));
 				list.add(Arguments.of(DX, Reply, RC_BREAK_XML));
 				list.add(Arguments.of(DX, Reply, REPLY_BREAK_XML));
@@ -553,8 +552,9 @@ class XmlCenterTest implements CommonTest {
 				list.add(Arguments.of(DX, Reply, TS_BREAK_XML));
 				list.add(Arguments.of(DX, Reply, USERID_BREAK_XML));
 				list.add(Arguments.of(DX, Reply, VERSION_BREAK_XML));
-			}
-		}
+			});
+		});
+
 		return list.stream();
 
 	}

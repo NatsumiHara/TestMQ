@@ -42,7 +42,6 @@ public interface Xml {
 	String RC00_XML = "RC00.xml";
 	String RC01_XML = "RC01.xml";
 	String RC_Tab_XML = "RC_Tab.xml";
-	String REPLY_XML = "REPLY.xml";
 	String USERID_NOT_XML = "userId_not.xml";
 	String VERSION_NOT_XML = "version_not.xml";
 	String KUBUN_NOT_XML = "kubun_not.xml";
