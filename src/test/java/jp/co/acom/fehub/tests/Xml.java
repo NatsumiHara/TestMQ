@@ -131,12 +131,7 @@ public interface Xml {
 	}
 
 	default String replacePluralRc(String xmlData, String rc) {
-//		if (rc != null) {
-//			xmlData = replaceErrorReply(xmlData,"<RC>" + rc + "</RC>");
-//		}
-//		
-//		return xmlData;
-//
+
 		return rc != null ? replaceErrorReply(xmlData, "<RC>" + rc + "</RC>") : xmlData;
 	}
 

@@ -1,6 +1,7 @@
 package jp.co.acom.fehub.mq;
 
 import static jp.co.acom.fehub.mq.ConstantQname.LOCALHOST;
+
 import static jp.co.acom.fehub.mq.ConstantQname.QL_DH_ERR;
 import static jp.co.acom.fehub.mq.ConstantQname.QL_DH_REP;
 import static jp.co.acom.fehub.mq.ConstantQname.QL_DW_REP;
